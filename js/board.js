@@ -1,0 +1,230 @@
+/* 멍멍 카페 — 보드, 드래그, 머지 */
+
+let dragState = null;
+
+function cellLeft(col) { const L = layout(); return L.BOARD_ORIGIN_X + col * (L.BOARD_CELL + L.BOARD_GAP); }
+function cellTop(row) { const L = layout(); return L.BOARD_ORIGIN_Y + row * (L.BOARD_CELL + L.BOARD_GAP); }
+function itemSize(tier) { return Math.round(layout().BOARD_CELL * CONFIG.ITEM_SCALE[tier]); }
+
+/* 현재 레벨에서 해금된 생성기 중, (row,col)에 있는 라인을 찾는다. 없으면 null. */
+function generatorLineAt(row, col) {
+  for (const id of unlockedLines(S.level)) {
+    const g = CONFIG.LINES[id];
+    if (g.genRow === row && g.genCol === col) return id;
+  }
+  return null;
+}
+function isGeneratorCell(row, col) { return generatorLineAt(row, col) !== null; }
+
+/* 저장된 보드에 생성기 칸 자리를 차지한 아이템이 있으면 가까운 빈칸으로 옮긴다(불러올 때 한 번). */
+function migrateGeneratorCells() {
+  unlockedLines(S.level).forEach(id => {
+    const g = CONFIG.LINES[id];
+    const occupied = S.board[g.genRow][g.genCol];
+    if (!occupied) return;
+    const dest = nearestEmptyCellToGenerator(id);
+    if (dest) { S.board[dest.row][dest.col] = occupied; S.board[g.genRow][g.genCol] = null; }
+  });
+}
+
+function initBoard() {
+  const L = layout();
+  const panel = $("boardPanel");
+  panel.style.left = L.BOARD_PANEL_LEFT + "px";
+  panel.style.top = L.BOARD_PANEL_TOP + "px";
+  panel.style.width = (L.BOARD_PANEL_RIGHT - L.BOARD_PANEL_LEFT) + "px";
+  panel.style.height = (L.BOARD_PANEL_BOTTOM - L.BOARD_PANEL_TOP) + "px";
+  const cellsWrap = $("boardCells");
+  cellsWrap.innerHTML = "";
+  for (let r = 0; r < CONFIG.BOARD_ROWS; r++) {
+    for (let c = 0; c < CONFIG.BOARD_COLS; c++) {
+      const cell = document.createElement("div");
+      cell.className = "cell" + (isGeneratorCell(r, c) ? " gen-cell" : "");
+      cell.style.left = cellLeft(c) + "px";
+      cell.style.top = cellTop(r) + "px";
+      cell.style.width = L.BOARD_CELL + "px";
+      cell.style.height = L.BOARD_CELL + "px";
+      cell.dataset.row = r; cell.dataset.col = c;
+      cellsWrap.appendChild(cell);
+    }
+  }
+  renderGenerators();
+  renderBoardItems();
+}
+
+/* 해금된 생성기들을 다시 그린다 (레벨업으로 새 라인이 열릴 때도 호출). */
+function renderGenerators() {
+  const L = layout();
+  const wrap = $("generators");
+  wrap.innerHTML = "";
+  unlockedLines(S.level).forEach(id => {
+    const g = CONFIG.LINES[id];
+    const el = document.createElement("img");
+    el.src = assetUrl(g.genFile);
+    el.alt = "";
+    el.className = "generatorImg";
+    el.dataset.line = id;
+    el.style.left = cellLeft(g.genCol) + "px";
+    el.style.top = cellTop(g.genRow) + "px";
+    el.style.width = L.BOARD_CELL + "px";
+    el.style.height = L.BOARD_CELL + "px";
+    el.onpointerdown = e => onGeneratorPointerDown(e, id);
+    wrap.appendChild(el);
+  });
+}
+
+function positionItemInCell(el, row, col, size) {
+  const pad = (layout().BOARD_CELL - size) / 2;
+  el.style.left = (cellLeft(col) + pad) + "px";
+  el.style.top = (cellTop(row) + pad) + "px";
+}
+
+function makeItemEl(row, col, item) {
+  const size = itemSize(item.tier);
+  const el = document.createElement("img");
+  el.src = assetUrl(CONFIG.LINES[item.line].items[item.tier]);
+  el.alt = "";
+  el.className = "boardItem" + (item.tier === 8 ? " glow" : "");
+  el.style.width = size + "px";
+  el.style.height = size + "px";
+  positionItemInCell(el, row, col, size);
+  el.dataset.row = row; el.dataset.col = col; el.dataset.line = item.line; el.dataset.tier = item.tier;
+  el.addEventListener("pointerdown", onItemPointerDown);
+  return el;
+}
+
+function renderBoardItems() {
+  const wrap = $("boardItems");
+  wrap.innerHTML = "";
+  for (let r = 0; r < CONFIG.BOARD_ROWS; r++) {
+    for (let c = 0; c < CONFIG.BOARD_COLS; c++) {
+      const it = S.board[r][c];
+      if (!it) continue;
+      wrap.appendChild(makeItemEl(r, c, it));
+    }
+  }
+}
+
+/* ---------- 드래그 ---------- */
+function onItemPointerDown(e) {
+  if (mathOpen || dragState) return;
+  e.preventDefault();
+  const el = e.currentTarget;
+  const row = +el.dataset.row, col = +el.dataset.col, line = el.dataset.line, tier = +el.dataset.tier;
+  const pt = clientToStage(e.clientX, e.clientY);
+  dragState = {
+    row, col, line, tier, el,
+    offsetX: pt.x - parseFloat(el.style.left),
+    offsetY: pt.y - parseFloat(el.style.top),
+  };
+  el.classList.add("dragging");
+  el.style.zIndex = 60;
+  try { el.setPointerCapture(e.pointerId); } catch (err) {}
+  el.addEventListener("pointermove", onItemPointerMove);
+  el.addEventListener("pointerup", onItemPointerUp);
+  el.addEventListener("pointercancel", onItemPointerUp);
+}
+function onItemPointerMove(e) {
+  if (!dragState) return;
+  const pt = clientToStage(e.clientX, e.clientY);
+  const el = dragState.el;
+  el.style.left = (pt.x - dragState.offsetX) + "px";
+  el.style.top = (pt.y - dragState.offsetY) + "px";
+  highlightDropTarget(pt);
+}
+function onItemPointerUp(e) {
+  if (!dragState) return;
+  const drag = dragState; dragState = null;
+  const el = drag.el;
+  el.removeEventListener("pointermove", onItemPointerMove);
+  el.removeEventListener("pointerup", onItemPointerUp);
+  el.removeEventListener("pointercancel", onItemPointerUp);
+  el.classList.remove("dragging");
+  el.style.zIndex = "";
+  clearDropHighlight();
+  const pt = clientToStage(e.clientX, e.clientY);
+  resolveDrop(drag, pt);
+}
+
+function hitTestCell(pt) {
+  const L = layout();
+  if (pt.x < L.BOARD_PANEL_LEFT || pt.x > L.BOARD_PANEL_RIGHT || pt.y < L.BOARD_PANEL_TOP || pt.y > L.BOARD_PANEL_BOTTOM) return null;
+  const step = L.BOARD_CELL + L.BOARD_GAP;
+  let col = Math.floor((pt.x - L.BOARD_ORIGIN_X) / step);
+  let row = Math.floor((pt.y - L.BOARD_ORIGIN_Y) / step);
+  col = Math.max(0, Math.min(CONFIG.BOARD_COLS - 1, col));
+  row = Math.max(0, Math.min(CONFIG.BOARD_ROWS - 1, row));
+  return { row, col };
+}
+function highlightDropTarget(pt) {
+  clearDropHighlight();
+  const cust = hitTestCustomer(pt);
+  if (cust) { markCustomerDropTarget(cust); return; }
+  const cell = hitTestCell(pt);
+  if (!cell || isGeneratorCell(cell.row, cell.col)) return;
+  const el = $("boardCells").querySelector(`[data-row="${cell.row}"][data-col="${cell.col}"]`);
+  if (el) el.classList.add("drop-target");
+}
+function clearDropHighlight() {
+  $("boardCells").querySelectorAll(".drop-target").forEach(el => el.classList.remove("drop-target"));
+  clearCustomerDropTarget();
+}
+
+function resolveDrop(drag, pt) {
+  const cust = hitTestCustomer(pt);
+  if (cust) {
+    if (tryServeCustomer(cust, drag.line, drag.tier)) {
+      S.board[drag.row][drag.col] = null;
+      saveState(); renderBoardItems(); renderHud();
+      return;
+    }
+    shakeCustomerBubble(cust);
+    renderBoardItems();
+    return;
+  }
+  const cell = hitTestCell(pt);
+  if (!cell || (cell.row === drag.row && cell.col === drag.col) || isGeneratorCell(cell.row, cell.col)) {
+    renderBoardItems();
+    return;
+  }
+  const target = S.board[cell.row][cell.col];
+  if (!target) {
+    S.board[cell.row][cell.col] = { line: drag.line, tier: drag.tier };
+    S.board[drag.row][drag.col] = null;
+  } else if (target.line === drag.line && target.tier === drag.tier && drag.tier < 8) {
+    S.board[cell.row][cell.col] = { line: drag.line, tier: drag.tier + 1 };
+    S.board[drag.row][drag.col] = null;
+    playMergeEffect(cell.row, cell.col);
+  } else {
+    const tmp = S.board[cell.row][cell.col];
+    S.board[cell.row][cell.col] = S.board[drag.row][drag.col];
+    S.board[drag.row][drag.col] = tmp;
+  }
+  saveState(); renderBoardItems();
+}
+
+/* ---------- 생성기 ---------- */
+function nearestEmptyCellToGenerator(line) {
+  const g = CONFIG.LINES[line];
+  let best = null, bestDist = Infinity;
+  for (let r = 0; r < CONFIG.BOARD_ROWS; r++) {
+    for (let c = 0; c < CONFIG.BOARD_COLS; c++) {
+      if (isGeneratorCell(r, c) || S.board[r][c]) continue;
+      const d = Math.hypot(r - g.genRow, c - g.genCol);
+      if (d < bestDist) { bestDist = d; best = { row: r, col: c }; }
+    }
+  }
+  return best;
+}
+function onGeneratorPointerDown(e, line) {
+  e.preventDefault();
+  if (mathOpen) return;
+  if (S.energy <= 0) { toast("문제를 풀면 에너지가 생겨요!"); openMath(); return; }
+  const cell = nearestEmptyCellToGenerator(line);
+  if (!cell) { toast("보드가 가득 찼어요"); shakeGenerator(line); return; }
+  S.energy -= CONFIG.ENERGY_PER_TAP;
+  const tier = Math.random() < CONFIG.GEN_DROP_RATE[1] ? 1 : 2;
+  S.board[cell.row][cell.col] = { line, tier };
+  saveState(); renderBoardItems(); renderHud();
+  popGeneratedItem(cell.row, cell.col);
+}

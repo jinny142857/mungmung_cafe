@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>멍멍 카페</title>
+<link rel="stylesheet" href="css/style.css?v=12">
+</head>
+<body>
+<div id="stageWrap">
+  <div id="stage">
+    <img id="layerBg" src="assets/bg/bg_cafe_lv1.png?v=12" alt="">
+    <img id="layerBgLandscape" src="assets/bg/bg_cafe_lv1_landscape.png?v=12" alt="">
+    <div id="customerLayer"></div>
+    <img id="layerCounterCover" src="assets/bg/bg_cafe_lv1.png?v=12" alt="">
+    <img id="layerCounterCoverLandscape" src="assets/bg/bg_cafe_lv1_landscape.png?v=12" alt="">
+    <div id="baristaWrap"><img id="baristaEl" src="assets/barista/barista_idle.png?v=12" alt="바리스타"></div>
+    <div id="bubbleLayer"></div>
+
+    <div id="boardPanel"></div>
+    <div id="boardCells"></div>
+    <div id="generators"></div>
+    <div id="boardItems"></div>
+
+    <div id="hud">
+      <div class="pill" id="pillCoin"><img src="assets/ui/ui_coin.png?v=12" alt=""><span id="hudCoin">0</span></div>
+      <div class="pill" id="pillLevel"><img src="assets/ui/ui_star.png?v=12" alt=""><span id="hudLevel">Lv.1</span><div class="expBar"><div class="expFill" id="hudExpFill"></div></div></div>
+      <div class="pill" id="pillEnergy"><img src="assets/ui/ui_energy.png?v=12" alt=""><span id="hudEnergy">10/60</span><button id="btnEnergyPlus" class="energyPlus" type="button">＋</button></div>
+      <button id="btnOpenSettings" class="settingsBtn" type="button">⚙</button>
+    </div>
+    <div class="pill todayPill" id="hudToday">오늘 0/10문제</div>
+
+    <div id="toastLayer"></div>
+    <div id="levelUpBanner" class="levelUpBanner"></div>
+
+    <!-- 시작 화면 -->
+    <div class="overlay" id="startOverlay">
+      <div class="card startCard">
+        <h2>멍멍 카페에 온 걸 환영해요!</h2>
+        <p class="sub">이름과 학년을 정하면 바로 카페 문을 열 수 있어요.</p>
+        <label class="fieldLabel" for="startNameInput">내 이름</label>
+        <input id="startNameInput" class="textInput" maxlength="10" placeholder="예: 하늘" autocomplete="off">
+        <div class="fieldLabel" id="gradeLabel">학년</div>
+        <div class="grades" id="startGrades"></div>
+        <div class="mini classLockMsg" id="gradeLockMsg" style="display:none"></div>
+        <button class="ctaBtn" id="btnStartEnter" type="button" disabled>🐾 카페 문 열기</button>
+      </div>
+    </div>
+
+    <!-- 설정 -->
+    <div class="overlay" id="settingsOverlay">
+      <div class="card">
+        <button class="closeBtn" id="btnCloseSettings" type="button">✕</button>
+        <h2>설정</h2>
+        <div class="fieldLabel">학년</div>
+        <div class="grades" id="gradeSettings"></div>
+        <div class="settingsRow">
+          <span>처음부터 다시 하기</span>
+          <button class="dangerBtn" id="btnReset" type="button">초기화</button>
+        </div>
+        <div id="resetConfirmBox" class="resetConfirmBox">
+          <p>정말 모든 기록을 지울까요?</p>
+          <div class="row">
+            <button id="btnResetCancel" class="cancelBtn" type="button">취소</button>
+            <button id="btnResetConfirm" class="dangerBtn" type="button">네, 지워요</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 수학 문제 -->
+    <div class="overlay" id="mathOverlay">
+      <div class="card mathCard">
+        <button class="closeBtn" id="btnMathClose" type="button">✕</button>
+        <div class="mathHead">
+          <div class="rewardBadge" id="mathRewardBadge">⚡ +6</div>
+          <div class="mathMeta" id="mathMeta"></div>
+        </div>
+        <div class="mathQCol">
+          <div class="mathScroll">
+            <div class="qlabel" id="qLabel"></div>
+            <div class="q" id="qText"></div>
+          </div>
+        </div>
+        <div class="mathACol">
+          <div class="ansArea" id="ansArea"></div>
+          <div class="fracNote" id="fracNote"></div>
+          <div class="mathMsg" id="mathMsg"></div>
+          <div class="keys" id="keys"></div>
+          <div class="mathFoot">
+            <span>이번에 받은 에너지 <b id="earnedCount">0</b></span>
+            <button class="moreBtn" id="btnMathMore" type="button">한 문제 더</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/config.js?v=12"></script>
+<script src="js/state.js?v=12"></script>
+<script src="js/curriculum.js?v=12"></script>
+<script src="js/board.js?v=12"></script>
+<script src="js/customers.js?v=12"></script>
+<script src="js/math.js?v=12"></script>
+<script src="js/ui.js?v=12"></script>
+<script src="js/main.js?v=12"></script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>멍멍 카페 — 교사 설정</title>
+<style>
+@font-face {
+  font-family: 'OngleipParkDahyeon';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2411-3@1.0/Ownglyph_ParkDaHyun.woff2') format('woff2');
+  font-weight: normal;
+  font-display: swap;
+}
+:root{
+  --ink:#4a3324; --brown:#5B3A29; --cream:#FFF6EA; --bgfill:#F6E7D8;
+  --green:#3f6b48; --green-d:#2d5134; --line:#E8D5C0; --pink:#e58a8a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bgfill);color:var(--ink);font-family:'OngleipParkDahyeon',"Noto Sans KR",system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer;color:inherit}
+.wrap{max-width:720px;margin:0 auto;padding:28px 20px 80px}
+h1{font-size:30px;margin:0 0 6px}
+.sub{color:#8a7158;font-size:15px;font-family:"Noto Sans KR",sans-serif;margin:0 0 24px;line-height:1.6}
+.card{background:var(--cream);border:2px solid var(--line);border-radius:20px;padding:22px 24px;margin-bottom:20px}
+.card h2{font-size:20px;margin:0 0 12px;color:var(--brown)}
+.grades{display:flex;flex-wrap:wrap;gap:8px}
+.grades button{min-width:80px;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:#fff;font-family:inherit;font-size:18px;font-weight:700;box-shadow:0 3px 0 var(--line)}
+.grades button.on{background:#eef6e6;border-color:#7aa65a;box-shadow:0 3px 0 #7aa65a}
+.semh{font-size:13px;color:#8a7158;font-weight:700;margin:16px 0 4px;font-family:"Noto Sans KR",sans-serif}
+.unit{border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.uh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.uh b{font-size:15px}
+.uh .sbtn{margin-left:auto}
+.sbtn{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;font-size:12px;font-family:"Noto Sans KR",sans-serif}
+.tgrid{display:flex;flex-wrap:wrap;gap:6px}
+.tchk{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;font-family:"Noto Sans KR",sans-serif}
+.tchk.on{background:#eef6e6;border-color:#7aa65a}
+.tchk .cb{width:16px;height:16px;border:1.5px solid var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#7aa65a;flex:none}
+.tchk.on .cb{border-color:#7aa65a}
+.topHead{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.topHead .count{font-size:13px;color:#8a7158;font-family:"Noto Sans KR",sans-serif}
+.linkRow{display:flex;gap:8px;margin-top:6px}
+.linkRow input{flex:1;font-family:inherit;font-size:15px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.cta{border:none;border-radius:14px;padding:14px 22px;font-size:17px;font-weight:700;background:var(--green);color:#fff;box-shadow:0 4px 0 var(--green-d)}
+.cta:active{transform:translateY(3px);box-shadow:none}
+.copyBtn{border:2px solid var(--line);border-radius:12px;padding:0 18px;font-size:15px;font-weight:700;background:#fff}
+.note{font-size:13px;color:#8a7158;font-family:"Noto Sans KR",sans-serif;margin-top:10px;line-height:1.6}
+.gate{position:fixed;inset:0;background:rgba(40,30,20,.55);display:none;align-items:center;justify-content:center;padding:20px}
+.gate.show{display:flex}
+.gatecard{background:var(--cream);border-radius:20px;max-width:360px;width:100%;padding:28px 24px;text-align:center}
+.gatecard h2{margin:0 0 8px;font-size:20px;color:var(--brown)}
+.gatecard p{font-size:14px;color:#8a7158;font-family:"Noto Sans KR",sans-serif;margin:0 0 16px}
+.gatecard input{width:100%;font-family:inherit;font-size:16px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;text-align:center;margin-bottom:10px}
+.gatecard .err{color:#a14646;font-size:13px;font-family:"Noto Sans KR",sans-serif;min-height:18px;margin-bottom:6px}
+.gatecard button{border:none;border-radius:12px;padding:12px;font-weight:700;width:100%;background:var(--green);color:#fff}
+</style>
+</head>
+<body>
+<div class="gate show" id="gate">
+  <div class="gatecard">
+    <h2>🔒 교사 전용 페이지</h2>
+    <p>비밀번호를 입력해 주세요.</p>
+    <input id="gatePw" type="password" placeholder="비밀번호" autocomplete="off">
+    <div class="err" id="gateErr"></div>
+    <button id="gateGo">들어가기</button>
+  </div>
+</div>
+
+<div class="wrap" id="appWrap" style="display:none">
+  <h1>🐾 멍멍 카페 — 교사 설정</h1>
+  <p class="sub">학년과(3학년이면 단원까지) 범위를 정하고 아래 링크를 학생들에게 나눠주세요.<br>그 링크로 들어온 학생은 학년을 고르지 않고 바로 그 범위로 시작합니다.</p>
+
+  <div class="card">
+    <h2>1. 학년 고르기</h2>
+    <div class="grades" id="teacherGrades"></div>
+  </div>
+
+  <div class="card" id="topicsCard" style="display:none">
+    <h2>2. 3학년 단원 고르기</h2>
+    <div class="topHead">
+      <button class="sbtn" id="topAll">전체 선택</button>
+      <button class="sbtn" id="topNone">모두 해제</button>
+      <span class="count" id="topCount"></span>
+    </div>
+    <div id="topBody"></div>
+    <div class="note">아무것도 고르지 않으면 3학년 전체 단원에서 문제가 나옵니다.</div>
+  </div>
+
+  <div class="card">
+    <h2>3. 학생에게 줄 링크</h2>
+    <div class="linkRow">
+      <input id="linkOut" readonly>
+      <button class="copyBtn" id="btnCopy" type="button">복사</button>
+    </div>
+    <div class="note" id="copyMsg"></div>
+  </div>
+
+  <p class="note">이 페이지의 비밀번호는 이 파일(teacher.html) 안에 직접 적혀 있는 잠금일 뿐, 진짜 보안은 아닙니다. 학생이 실수로 들어오는 것을 막는 정도로 생각해 주세요. 바꾸시려면 teacher.html 파일에서 <code>TEACHER_PASS</code> 값을 고치면 됩니다.</p>
+</div>
+
+<script src="js/curriculum.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const TEACHER_PASS = "teacher123";
+
+function tryEnter() {
+  if ($("gatePw").value === TEACHER_PASS) {
+    sessionStorage.setItem("mungmungTeacherAuthed", "1");
+    $("gate").classList.remove("show");
+    $("appWrap").style.display = "block";
+  } else {
+    $("gateErr").textContent = "비밀번호가 올바르지 않아요.";
+  }
+}
+if (sessionStorage.getItem("mungmungTeacherAuthed") === "1") {
+  $("gate").classList.remove("show");
+  $("appWrap").style.display = "block";
+}
+$("gateGo").onclick = tryEnter;
+$("gatePw").addEventListener("keydown", e => { if (e.key === "Enter") tryEnter(); });
+
+let grade = 0;
+let topicSel = new Set();
+
+function buildGrades() {
+  $("teacherGrades").innerHTML = [1, 2, 3, 4, 5, 6].map(g => `<button class="${g === grade ? "on" : ""}" data-g="${g}">${g}학년</button>`).join("");
+  $("teacherGrades").querySelectorAll("button").forEach(b => b.onclick = () => {
+    grade = +b.dataset.g;
+    buildGrades();
+    $("topicsCard").style.display = grade === 3 ? "block" : "none";
+    if (grade === 3) buildTopics();
+    updateLink();
+  });
+}
+function buildTopics() {
+  $("topCount").textContent = topicSel.size + " / " + ALL3.length + " 선택";
+  let h = "", sem = "";
+  for (const u of UNITS3) {
+    if (u.sem !== sem) { sem = u.sem; h += `<div class="semh">3학년 ${sem.endsWith("1") ? "1" : "2"}학기</div>`; }
+    const allOn = u.t.every(([id]) => topicSel.has(id));
+    h += `<div class="unit"><div class="uh"><b>${u.name}</b><button class="sbtn" data-unit="${UNITS3.indexOf(u)}">${allOn ? "단원 해제" : "단원 전체"}</button></div>
+      <div class="tgrid">${u.t.map(([id, n]) => `<button class="tchk ${topicSel.has(id) ? "on" : ""}" data-tid="${id}"><span class="cb">${topicSel.has(id) ? "✓" : ""}</span>${n}</button>`).join("")}</div></div>`;
+  }
+  $("topBody").innerHTML = h;
+  $("topBody").querySelectorAll("[data-tid]").forEach(b => b.onclick = () => {
+    const id = b.dataset.tid;
+    topicSel.has(id) ? topicSel.delete(id) : topicSel.add(id);
+    buildTopics(); updateLink();
+  });
+  $("topBody").querySelectorAll("[data-unit]").forEach(b => b.onclick = () => {
+    const u = UNITS3[+b.dataset.unit], on = u.t.every(([id]) => topicSel.has(id));
+    u.t.forEach(([id]) => on ? topicSel.delete(id) : topicSel.add(id));
+    buildTopics(); updateLink();
+  });
+  updateLink();
+}
+$("topAll").onclick = () => { ALL3.forEach(id => topicSel.add(id)); buildTopics(); };
+$("topNone").onclick = () => { topicSel.clear(); buildTopics(); };
+
+function updateLink() {
+  if (!grade) { $("linkOut").value = ""; return; }
+  let url = "index.html?g=" + grade;
+  if (grade === 3 && topicSel.size) url += "&t=" + [...topicSel].join(",");
+  $("linkOut").value = new URL(url, location.href).href;
+}
+$("btnCopy").onclick = async () => {
+  const val = $("linkOut").value;
+  if (!val) return;
+  try {
+    await navigator.clipboard.writeText(val);
+  } catch (e) {
+    $("linkOut").select(); document.execCommand("copy");
+  }
+  $("copyMsg").textContent = "복사했어요!";
+  setTimeout(() => { $("copyMsg").textContent = ""; }, 2000);
+};
+
+buildGrades();
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>멍멍 수학 마을</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+@font-face {
+    font-family: 'OngleipParkDahyeon';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2411-3@1.0/Ownglyph_ParkDaHyun.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+:root{
+  --bg:#f4efe1; --card:#fffdf6; --line:#e6dcc0; --ink:#2f3a2c; --soft:#7a7a68;
+  --green:#3f6b48; --green-d:#2d5134; --yellow:#f3c95c; --yellow-d:#d9a93a;
+  --pink:#e58a8a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'OngleipParkDahyeon',"Noto Sans KR",system-ui,sans-serif;font-size:16px}
+body{background-image:radial-gradient(#e2d9bf 1px,transparent 1px);background-size:18px 18px;display:flex;align-items:center;justify-content:center}
+button{font-family:inherit;cursor:pointer}
+.wrap{max-width:460px;width:100%;margin:0 auto;padding:28px 20px;text-align:center}
+.logo{width:min(260px,70%);margin:0 auto 6px;display:block}
+.sub{color:var(--soft);font-size:14px;font-family:"Noto Sans KR",sans-serif;margin:0 0 30px;line-height:1.6}
+.choices{display:flex;flex-direction:column;gap:14px}
+.choice{display:flex;align-items:center;gap:14px;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:0 4px 0 #e2d8bb;text-decoration:none;color:inherit;width:100%}
+.choice:active{transform:translateY(3px);box-shadow:none}
+.choice .ic{font-size:34px;flex:none}
+.choice b{font-size:18px;display:block;color:var(--ink)}
+.choice span{font-size:12px;color:var(--soft);font-family:"Noto Sans KR",sans-serif}
+.choice.student{border-color:#9dbb8a;background:#eef6e6}
+.choice.teacher{border-color:#cfc2e8;background:#f3eefc}
+.foot{margin-top:28px;font-size:12px;color:var(--soft);font-family:"Noto Sans KR",sans-serif}
+.legal{margin-top:14px;font-size:12px;color:var(--soft);font-family:"Noto Sans KR",sans-serif;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.legal a{color:var(--soft);text-decoration:underline}
+
+.gate{position:fixed;inset:0;background:rgba(40,50,35,.55);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+.gate.show{display:flex}
+.gatecard{background:var(--card);border-radius:16px;max-width:360px;width:100%;padding:24px 22px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.gatecard h2{margin:0 0 6px;font-size:19px;color:var(--green-d)}
+.gatecard p{margin:0 0 16px;font-size:13px;color:var(--soft);font-family:"Noto Sans KR",sans-serif}
+.gatecard input{width:100%;font-family:"Noto Sans KR",sans-serif;font-size:16px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);text-align:center;margin-bottom:10px;outline:none}
+.gatecard input:focus{border-color:#7aa65a}
+.gatecard .err{color:#a14646;font-size:13px;font-family:"Noto Sans KR",sans-serif;min-height:18px;margin-bottom:6px}
+.gatecard .row{display:flex;gap:8px}
+.gatecard button{border:none;border-radius:10px;padding:12px;font-weight:700;font-family:"Noto Sans KR",sans-serif;flex:1}
+.gatecard .go{background:var(--green);color:#fff;box-shadow:0 3px 0 var(--green-d)}
+.gatecard .cancel{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <img class="logo" src="assets/logo.png" alt="멍멍 수학 마을">
+  <p class="sub">수학 문제를 풀어 강아지를 모으는 학습 게임이에요.<br>누구신가요?</p>
+  <div class="choices">
+    <a class="choice student" href="game.html">
+      <span class="ic">🐶</span>
+      <span><b>학생이에요</b><span>닉네임과 비밀번호로 내 마당에 들어가요</span></span>
+    </a>
+    <button class="choice teacher" id="btnTeacher" type="button">
+      <span class="ic">🧑‍🏫</span>
+      <span><b>선생님이에요</b><span>학년·문제 범위를 정하고 QR을 만들어요</span></span>
+    </button>
+  </div>
+  <div class="foot">학생은 선생님이 주신 QR로 들어오면 자동으로 설정돼요.</div>
+  <div class="legal">🐾 멍멍 수학 마을 · 운영: 서울원광초등학교 나혜진 · <a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a></div>
+</div>
+
+<div class="gate" id="gate">
+  <div class="gatecard">
+    <h2>🔒 선생님 전용</h2>
+    <p>교사 페이지 비밀번호를 입력해 주세요.</p>
+    <input id="gatePw" type="password" placeholder="비밀번호" autocomplete="off">
+    <div class="err" id="gateErr"></div>
+    <div class="row">
+      <button class="cancel" id="gateCancel">취소</button>
+      <button class="go" id="gateGo">들어가기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const TEACHER_PASS="pass1234";
+
+function openGate(){ $("gatePw").value=""; $("gateErr").textContent=""; $("gate").classList.add("show"); setTimeout(()=>$("gatePw").focus(),80); }
+function closeGate(){ $("gate").classList.remove("show"); }
+
+$("btnTeacher").onclick=()=>{
+  if(sessionStorage.getItem("teacherAuthed")==="1"){ location.href="teacher.html"; return; }
+  openGate();
+};
+$("gateCancel").onclick=closeGate;
+$("gate").addEventListener("click",e=>{ if(e.target.id==="gate") closeGate(); });
+function tryEnter(){
+  if($("gatePw").value===TEACHER_PASS){ sessionStorage.setItem("teacherAuthed","1"); location.href="teacher.html"; }
+  else{ $("gateErr").textContent="비밀번호가 올바르지 않아요."; }
+}
+$("gateGo").onclick=tryEnter;
+$("gatePw").addEventListener("keydown",e=>{ if(e.key==="Enter") tryEnter(); });
+</script>
+</body>
+</html>
