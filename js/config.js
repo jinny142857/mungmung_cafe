@@ -4,7 +4,7 @@
 const CONFIG = {
   // 그림 파일을 같은 이름으로 다시 올렸을 때 브라우저가 옛날 캐시를 쓰지 않도록 붙이는 숫자.
   // 그림을 바꿀 때마다 1씩 올린다.
-  ASSET_V: 22,
+  ASSET_V: 28,
 
   // 에너지
   ENERGY_MAX: 60,
@@ -116,10 +116,13 @@ const CONFIG = {
   // 파일: assets/bg/bg_cafe_{key}.png, bg_cafe_{key}_landscape.png
   // 아직 안 만든 레벨의 그림은 lv1으로 자동 대체된다(ui.js의 setCafeBgImg 참고).
   CAFE_BG_LEVELS: [
-    { minLevel: 1, key: "lv1", desc: "작은 포장마차 카페" },
-    { minLevel: 3, key: "lv2", desc: "작은 매장 + 테이블 2개" },
-    { minLevel: 5, key: "lv3", desc: "베이커리 진열장 추가" },
-    { minLevel: 8, key: "lv4", desc: "2층 테라스 카페" },
+    { minLevel: 1, key: "lv1", desc: "기본 카페" },
+    { minLevel: 2, key: "lv2", desc: "바다속 인어공주 카페" },
+    { minLevel: 3, key: "lv3", desc: "할로윈 카페" },
+    { minLevel: 4, key: "lv4", desc: "크리스마스 카페" },
+    { minLevel: 5, key: "lv5", desc: "눈 내리는 겨울왕국 카페" },
+    { minLevel: 6, key: "lv6", desc: "우주 은하수 카페" },
+    { minLevel: 7, key: "lv7", desc: "미드나잇 테라스 카페(최고 레벨 — 8·9레벨도 이 배경 유지)" },
   ],
 
   // 레벨별 주문 규칙 — 해당 레벨 이상에서 적용되는 규칙 중 가장 높은 것을 쓴다.

@@ -1,5 +1,10 @@
-/* 멍멍 카페 — 게임 상태, 저장/불러오기 */
-const SAVE_KEY = "mungmungCafe.v1";
+/* 멍멍 카페 — 게임 상태, 저장/불러오기
+   여러 학생이 한 기기(아이패드)를 같이 쓸 수 있게, 닉네임별로 따로 저장한다.
+   닉네임·비밀번호는 이 기기 안에만 저장되고 서버로 보내지 않는다.
+   서버(Firebase)에는 랭킹에 필요한 이름·레벨·코인만 올라간다(js/ranking.js). */
+const SAVE_KEY = "mungmungCafe.v1"; // 예전(닉네임 구분 없던 시절) 저장 — 마이그레이션 읽기 전용
+const PROFILES_KEY = "mungmungCafe.profiles.v1"; // 닉네임별 저장
+const LAST_NAME_KEY = "mungmungCafe.lastName.v1"; // 로그인 칸에 미리 채워줄 마지막 닉네임
 
 function todayStr() {
   const d = new Date();
@@ -58,6 +63,7 @@ function freshState() {
   }
   return {
     name: "",
+    password: null, // 이 기기에만 저장된다(서버로 보내지 않음)
     grade: 0,
     tier: 0,          // 수학 난이도 단계 0~2
     topics: null,     // 3학년 단원 범위(교사 링크로 들어왔을 때만). null/빈 배열이면 3학년 전체
@@ -80,34 +86,102 @@ function freshState() {
 
 let S = freshState();
 
-function loadState() {
-  let loaded = null;
+/* ---------- 닉네임별 저장(프로필) ---------- */
+function loadProfiles() {
+  try {
+    const raw = localStorage.getItem(PROFILES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+function saveProfiles(profiles) {
+  try { localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles)); } catch (e) {}
+}
+function getLastName() {
+  try { return localStorage.getItem(LAST_NAME_KEY) || ""; } catch (e) { return ""; }
+}
+function setLastName(name) {
+  try { localStorage.setItem(LAST_NAME_KEY, name); } catch (e) {}
+}
+function profileExists(name) {
+  return !!loadProfiles()[name];
+}
+/* 비밀번호가 없는 프로필(예전 저장을 옮겨온 경우) — 로그인할 때 입력한 값을 새 비밀번호로 정한다. */
+function profileNeedsNewPassword(name) {
+  const p = loadProfiles()[name];
+  return !!p && !p.password;
+}
+function forgetProfile(name) {
+  const profiles = loadProfiles();
+  delete profiles[name];
+  saveProfiles(profiles);
+}
+/* 예전 버전(닉네임 구분 없이 혼자 쓰던 저장)이 있으면 그 이름의 프로필로 한 번만 옮긴다. */
+function migrateLegacySave() {
+  const profiles = loadProfiles();
+  if (Object.keys(profiles).length) return;
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) loaded = JSON.parse(raw);
-  } catch (e) {}
-  if (loaded) {
-    S = Object.assign(freshState(), loaded);
-    if (!S.today || S.today.date !== todayStr()) {
-      S.today = { date: todayStr(), solved: 0, correct: 0, served: 0 };
+    if (!raw) return;
+    const legacy = JSON.parse(raw);
+    if (legacy && legacy.name) {
+      profiles[legacy.name] = Object.assign(freshState(), legacy, { password: null });
+      saveProfiles(profiles);
     }
-    if (typeof S.today.served !== "number") S.today.served = 0; // 이 기능 전에 저장된 당일 기록 호환
-    // 라인 추가 전 저장 데이터 호환: {tier}만 있던 칸은 커피로 간주
-    if (S.board) {
-      for (const row of S.board) {
-        for (const cell of row) {
-          if (cell && !cell.line) cell.line = "coffee";
-        }
+  } catch (e) {}
+}
+function normalizeLoadedState() {
+  if (!S.today || S.today.date !== todayStr()) {
+    S.today = { date: todayStr(), solved: 0, correct: 0, served: 0 };
+  }
+  if (typeof S.today.served !== "number") S.today.served = 0; // 이 기능 전에 저장된 당일 기록 호환
+  // 라인 추가 전 저장 데이터 호환: {tier}만 있던 칸은 커피로 간주
+  if (S.board) {
+    for (const row of S.board) {
+      for (const cell of row) {
+        if (cell && !cell.line) cell.line = "coffee";
       }
     }
-  } else {
-    S = freshState();
   }
+}
+
+/* 로그인 시도. 성공하면 S를 그 친구의 저장 내용으로 바꾼다.
+   결과: {ok:true, isNew} | {ok:true, isNew:false, passwordJustSet:true} | {ok:false} */
+function tryLogin(name, password, grade, topics) {
+  const profiles = loadProfiles();
+  const existing = profiles[name];
+  setLastName(name);
+  if (!existing) {
+    S = Object.assign(freshState(), { name, grade, topics: topics || null, password });
+    profiles[name] = S;
+    saveProfiles(profiles);
+    return { ok: true, isNew: true };
+  }
+  if (!existing.password) {
+    existing.password = password;
+    S = Object.assign(freshState(), existing);
+    normalizeLoadedState();
+    saveProfiles(profiles);
+    return { ok: true, isNew: false, passwordJustSet: true };
+  }
+  if (existing.password !== password) {
+    return { ok: false };
+  }
+  S = Object.assign(freshState(), existing);
+  normalizeLoadedState();
+  return { ok: true, isNew: false };
+}
+
+function loadState() {
+  migrateLegacySave();
+  S = freshState(); // 로그인하기 전까지는 빈 상태 — 실제 데이터는 로그인할 때 tryLogin()이 채운다
   return S;
 }
 
 function saveState() {
+  if (!S.name) return;
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(S));
+    const profiles = loadProfiles();
+    profiles[S.name] = S;
+    saveProfiles(profiles);
   } catch (e) {}
 }

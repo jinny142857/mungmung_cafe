@@ -157,6 +157,34 @@ img{-webkit-user-drag:none;user-select:none}
 .card .sub{margin:0 0 30px;font-size:26px;color:#8a7158;text-align:center;font-family:"Noto Sans KR",sans-serif}
 .closeBtn{position:absolute;right:24px;top:24px;width:56px;height:56px;border-radius:50%;border:none;background:#fff;font-size:28px}
 .fieldLabel{font-size:26px;font-weight:700;margin:16px 0 10px}
+
+/* ---------- 시작 화면(로그인) ---------- */
+.startCard{
+  max-width:620px;text-align:center;
+  background:linear-gradient(180deg,#FFF9F1 0%,var(--cream) 220px);
+  border:4px solid #fff;
+}
+.startBadge{font-size:30px;letter-spacing:10px;opacity:.8;margin-bottom:-6px}
+.startMascot{width:180px;height:180px;object-fit:contain;display:block;margin:0 auto;filter:drop-shadow(0 10px 14px rgba(91,58,41,.25))}
+.startCard h2{font-size:52px;margin-top:4px}
+.startCard .fieldLabel{text-align:left}
+.authMsg{min-height:34px;font-size:22px;color:#8a7158;font-family:"Noto Sans KR",sans-serif;font-weight:700;margin:10px 2px 0;text-align:center}
+.authMsg.bad{color:#a14646}
+.linkBtn{display:block;margin:6px auto 0;background:none;border:none;color:#8a7158;font-family:"Noto Sans KR",sans-serif;font-size:18px;text-decoration:underline;cursor:pointer;padding:6px}
+
+/* 가로(아이패드 landscape)는 세로 공간이 좁아서 로그인 카드를 작게 줄인다 */
+#stage.landscape .startCard{padding:22px 36px;max-width:680px}
+#stage.landscape .startBadge{font-size:20px;margin-bottom:-2px}
+#stage.landscape .startMascot{width:96px;height:96px}
+#stage.landscape .startCard h2{font-size:34px;margin-top:0}
+#stage.landscape .startCard .sub{font-size:19px;margin-bottom:14px}
+#stage.landscape .startCard .fieldLabel{margin:8px 0 6px;font-size:20px}
+#stage.landscape .startCard .textInput{padding:10px 16px;font-size:24px}
+#stage.landscape .startCard .authMsg{font-size:18px;min-height:24px;margin-top:6px}
+#stage.landscape .startCard .linkBtn{font-size:16px;margin-top:2px}
+#stage.landscape .startCard .grades{gap:6px}
+#stage.landscape .startCard .grades button{padding:10px 12px;font-size:20px;min-width:88px}
+#stage.landscape .startCard .ctaBtn{padding:14px;font-size:24px;margin-top:14px}
 .classLockMsg{text-align:center;font-size:24px;color:#4a7a3a;background:#eef6e6;border-radius:14px;padding:14px;margin:10px 0;font-family:"Noto Sans KR",sans-serif}
 .textInput{
   width:100%;font-family:inherit;font-size:32px;padding:18px 20px;border:3px solid var(--line);border-radius:18px;
@@ -198,6 +226,26 @@ img{-webkit-user-drag:none;user-select:none}
 .dexCell img{width:78%;height:78%;object-fit:contain}
 .dexCell.found{background:#eef6e6;border-color:#7aa65a}
 .dexQ{font-size:34px;color:#c2b994;font-weight:700}
+
+/* ---------- 문제 범위(3학년 단원 고르기) ---------- */
+.topicsCard{max-width:900px;max-height:85%;overflow-y:auto}
+.topicsCard .sub{font-size:20px;margin-bottom:16px}
+.topHead{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.topHead .count{font-size:18px;color:#8a7158;font-family:"Noto Sans KR",sans-serif;font-weight:700}
+.topHead .fill{flex:1}
+.sbtn{background:#fff;border:2px solid var(--line);border-radius:12px;padding:8px 14px;font-family:"Noto Sans KR",sans-serif;font-size:15px;font-weight:700}
+.semh{font-size:16px;color:#8a7158;font-weight:700;margin:14px 0 6px;font-family:"Noto Sans KR",sans-serif}
+.unit{border:2px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.uh{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.uh b{font-size:18px}
+.uh .fill{flex:1}
+.std{font-size:12px;color:#8a7158;background:#f3e9da;border-radius:8px;padding:3px 8px;font-family:"Noto Sans KR",sans-serif;cursor:pointer}
+.tgrid{display:flex;flex-wrap:wrap;gap:8px}
+.tchk{display:flex;align-items:center;gap:6px;background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px 12px;font-family:"Noto Sans KR",sans-serif;font-size:15px}
+.tchk.on{background:#eef6e6;border-color:#7aa65a}
+.tchk .cb{width:18px;height:18px;border:2px solid var(--line);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#7aa65a;flex:none}
+.tchk.on .cb{border-color:#7aa65a}
+.note{font-size:18px;color:#8a7158;font-family:"Noto Sans KR",sans-serif;margin-top:14px;text-align:center}
 
 /* ---------- 랭킹 ---------- */
 .rankingCard{max-width:620px;max-height:85%;overflow-y:auto}

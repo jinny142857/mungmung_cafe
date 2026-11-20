@@ -51,21 +51,29 @@ function loop(t) {
   requestAnimationFrame(loop);
 }
 
-function init() {
-  loadState();
-  readLinkSettings();
-  if (pendingClassCode) { S.grade = pendingGrade; S.tier = 0; S.topics = pendingTopics; }
+/* 로그인에 성공한 뒤(또는 새 친구로 시작한 뒤) 그 친구의 저장 내용을 화면에 반영한다. */
+function onLoggedIn() {
   migrateGeneratorCells();
   applyLayout();
   initBoard();
   updateCafeBackground();
+  relayoutCustomers();
+  renderHud();
+  resumeGame();
+}
+
+function init() {
+  loadState();
+  readLinkSettings();
+  applyLayout();
+  initBoard();
   initCustomers();
   initMathUI();
   initRankingUI();
   initFirebase();
   renderHud();
-  paused = !(S.name && S.grade);
-  if (paused) openStart();
+  paused = true;
+  openStart(); // 기기를 같이 쓰는 친구들을 구분하기 위해 매번 로그인 화면부터 보여준다
   requestAnimationFrame(loop);
 }
 

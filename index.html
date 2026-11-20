@@ -4,17 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>멍멍 카페</title>
-<link rel="stylesheet" href="css/style.css?v=22">
+<link rel="stylesheet" href="css/style.css?v=28">
 </head>
 <body>
 <div id="stageWrap">
   <div id="stage">
-    <img id="layerBg" src="assets/bg/bg_cafe_lv1.png?v=22" alt="">
-    <img id="layerBgLandscape" src="assets/bg/bg_cafe_lv1_landscape.png?v=22" alt="">
+    <img id="layerBg" src="assets/bg/bg_cafe_lv1.png?v=28" alt="">
+    <img id="layerBgLandscape" src="assets/bg/bg_cafe_lv1_landscape.png?v=28" alt="">
     <div id="customerLayer"></div>
-    <img id="layerCounterCover" src="assets/bg/bg_cafe_lv1.png?v=22" alt="">
-    <img id="layerCounterCoverLandscape" src="assets/bg/bg_cafe_lv1_landscape.png?v=22" alt="">
-    <div id="baristaWrap"><img id="baristaEl" src="assets/barista/barista_idle.png?v=22" alt="바리스타"></div>
+    <img id="layerCounterCover" src="assets/bg/bg_cafe_lv1.png?v=28" alt="">
+    <img id="layerCounterCoverLandscape" src="assets/bg/bg_cafe_lv1_landscape.png?v=28" alt="">
+    <div id="baristaWrap"><img id="baristaEl" src="assets/barista/barista_idle.png?v=28" alt="바리스타"></div>
     <div id="bubbleLayer"></div>
 
     <div id="boardPanel"></div>
@@ -23,9 +23,9 @@
     <div id="boardItems"></div>
 
     <div id="hud">
-      <div class="pill" id="pillCoin"><img src="assets/ui/ui_coin.png?v=22" alt=""><span id="hudCoin">0</span></div>
-      <div class="pill" id="pillLevel"><img src="assets/ui/ui_star.png?v=22" alt=""><span id="hudLevel">Lv.1</span><div class="expBar"><div class="expFill" id="hudExpFill"></div></div></div>
-      <div class="pill" id="pillEnergy"><img src="assets/ui/ui_energy.png?v=22" alt=""><span id="hudEnergy">10/60</span><button id="btnEnergyPlus" class="energyPlus" type="button">＋</button></div>
+      <div class="pill" id="pillCoin"><img src="assets/ui/ui_coin.png?v=28" alt=""><span id="hudCoin">0</span></div>
+      <div class="pill" id="pillLevel"><img src="assets/ui/ui_star.png?v=28" alt=""><span id="hudLevel">Lv.1</span><div class="expBar"><div class="expFill" id="hudExpFill"></div></div></div>
+      <div class="pill" id="pillEnergy"><img src="assets/ui/ui_energy.png?v=28" alt=""><span id="hudEnergy">10/60</span><button id="btnEnergyPlus" class="energyPlus" type="button">＋</button></div>
       <button id="btnOpenDex" class="settingsBtn" type="button">📖</button>
       <button id="btnOpenRanking" class="settingsBtn" type="button">🏆</button>
       <button id="btnOpenSettings" class="settingsBtn" type="button">⚙</button>
@@ -35,13 +35,26 @@
     <div id="toastLayer"></div>
     <div id="levelUpBanner" class="levelUpBanner"></div>
 
-    <!-- 시작 화면 -->
+    <!-- 시작 화면(로그인) -->
     <div class="overlay" id="startOverlay">
       <div class="card startCard">
-        <h2>멍멍 카페에 온 걸 환영해요!</h2>
-        <p class="sub">이름과 학년을 정하면 바로 카페 문을 열 수 있어요.</p>
-        <label class="fieldLabel" for="startNameInput">내 이름</label>
+        <div class="startBadge">🐾☕🐾</div>
+        <img class="startMascot" src="assets/barista/barista_greet.png?v=28" alt="">
+        <h2>멍멍 카페</h2>
+        <p class="sub">닉네임과 비밀번호를 입력하고 카페 문을 열어요.<br>같은 기기를 같이 써도 친구마다 따로 저장돼요.</p>
+        <label class="fieldLabel" for="startNameInput">닉네임</label>
         <input id="startNameInput" class="textInput" maxlength="10" placeholder="예: 하늘" autocomplete="off">
+        <label class="fieldLabel" for="startPasswordInput">비밀번호</label>
+        <input id="startPasswordInput" class="textInput" maxlength="12" placeholder="예: 1234 (쉬운 걸로)" autocomplete="off">
+        <div class="authMsg" id="authMsg"></div>
+        <button type="button" class="linkBtn" id="btnForgotPw" style="display:none">비밀번호를 잊어버렸어요</button>
+        <div id="forgotPwBox" class="resetConfirmBox">
+          <p>비밀번호를 잊어버리면 그동안 모은 기록을 지우고 새로 시작해야 해요. 정말 다시 시작할까요?</p>
+          <div class="row">
+            <button id="btnForgotCancel" class="cancelBtn" type="button">취소</button>
+            <button id="btnForgotConfirm" class="dangerBtn" type="button">네, 다시 시작할래요</button>
+          </div>
+        </div>
         <div class="fieldLabel" id="gradeLabel">학년</div>
         <div class="grades" id="startGrades"></div>
         <div class="mini classLockMsg" id="gradeLockMsg" style="display:none"></div>
@@ -56,14 +69,22 @@
         <h2>설정</h2>
         <div class="fieldLabel">학년</div>
         <div class="grades" id="gradeSettings"></div>
+        <div class="settingsRow">
+          <span>문제 범위 (3학년 단원 고르기)</span>
+          <button class="cancelBtn" id="btnOpenTopics" type="button">고르기</button>
+        </div>
         <div class="fieldLabel">생성기 업그레이드 <span class="genCoinHint">🪙 <b id="genCoinCount">0</b></span></div>
         <div id="genUpgradeList"></div>
+        <div class="settingsRow">
+          <span>다른 친구에게 기기 넘겨주기</span>
+          <button class="cancelBtn" id="btnSwitchProfile" type="button">로그아웃</button>
+        </div>
         <div class="settingsRow">
           <span>처음부터 다시 하기</span>
           <button class="dangerBtn" id="btnReset" type="button">초기화</button>
         </div>
         <div id="resetConfirmBox" class="resetConfirmBox">
-          <p>정말 모든 기록을 지울까요?</p>
+          <p>정말 내 기록을 모두 지울까요? (다른 친구 기록은 안 지워져요)</p>
           <div class="row">
             <button id="btnResetCancel" class="cancelBtn" type="button">취소</button>
             <button id="btnResetConfirm" class="dangerBtn" type="button">네, 지워요</button>
@@ -79,6 +100,24 @@
         <h2>도감</h2>
         <div class="dexCount" id="dexCount"></div>
         <div id="dexBody"></div>
+      </div>
+    </div>
+
+    <!-- 문제 범위(3학년 단원 고르기) -->
+    <div class="overlay" id="topicsOverlay">
+      <div class="card topicsCard">
+        <button class="closeBtn" id="btnCloseTopics" type="button">✕</button>
+        <h2>문제 범위 고르기</h2>
+        <p class="sub">2022 개정 교육과정 3학년 성취기준에서 뽑은 유형이에요.<br>고른 유형 안에서 문제가 랜덤으로 나와요.</p>
+        <div class="topHead">
+          <span class="count" id="topCount"></span>
+          <span class="fill"></span>
+          <button class="sbtn" id="topAll" type="button">이 학년 전체 선택</button>
+          <button class="sbtn" id="topNone" type="button">모두 해제</button>
+        </div>
+        <div id="topBody"></div>
+        <button class="ctaBtn" id="topDone" type="button">이 범위로 문제 풀기</button>
+        <p class="mini note">성취기준 코드를 누르면 내용이 보여요. 고른 유형이 없으면 3학년 전체에서 나와요.</p>
       </div>
     </div>
 
@@ -128,14 +167,14 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
-<script src="js/config.js?v=22"></script>
-<script src="js/state.js?v=22"></script>
-<script src="js/curriculum.js?v=22"></script>
-<script src="js/board.js?v=22"></script>
-<script src="js/customers.js?v=22"></script>
-<script src="js/math.js?v=22"></script>
-<script src="js/ui.js?v=22"></script>
-<script src="js/ranking.js?v=22"></script>
-<script src="js/main.js?v=22"></script>
+<script src="js/config.js?v=28"></script>
+<script src="js/state.js?v=28"></script>
+<script src="js/curriculum.js?v=28"></script>
+<script src="js/board.js?v=28"></script>
+<script src="js/customers.js?v=28"></script>
+<script src="js/math.js?v=28"></script>
+<script src="js/ui.js?v=28"></script>
+<script src="js/ranking.js?v=28"></script>
+<script src="js/main.js?v=28"></script>
 </body>
 </html>

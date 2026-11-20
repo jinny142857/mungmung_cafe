@@ -365,9 +365,10 @@ document.addEventListener("keydown", e => {
 
 /* ---------- 학년 선택 & 시작 화면 ---------- */
 function cleanName(v) { return v.replace(/[<>&"']/g, "").trim().slice(0, 10); }
-function buildGrades(id, onPick) {
+function buildGrades(id, onPick, selected) {
   const el = $(id);
-  el.innerHTML = [1, 2, 3, 4, 5, 6].map(g => `<button class="${S.grade === g ? "on" : ""}" data-g="${g}">${g}학년</button>`).join("");
+  const sel = selected !== undefined ? selected : S.grade;
+  el.innerHTML = [1, 2, 3, 4, 5, 6].map(g => `<button class="${sel === g ? "on" : ""}" data-g="${g}">${g}학년</button>`).join("");
   el.querySelectorAll("button").forEach(b => b.onclick = () => {
     el.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
     onPick(+b.dataset.g);
@@ -385,18 +386,49 @@ function readLinkSettings() {
     pendingClassCode = true;
   }
 }
-function openStart() {
-  $("startNameInput").value = S.name || "";
-  startGrade = pendingClassCode ? pendingGrade : (S.grade || 0);
-  $("gradeLabel").style.display = pendingClassCode ? "none" : "";
-  $("startGrades").style.display = pendingClassCode ? "none" : "flex";
-  $("gradeLockMsg").style.display = pendingClassCode ? "block" : "none";
-  if (pendingClassCode) {
-    $("gradeLockMsg").textContent = "📚 선생님이 정해주신 " + pendingGrade + "학년 범위로 시작해요";
+/* 이름 입력칸 내용에 따라 '처음 온 친구'인지 '다시 온 친구'인지 알아보고,
+   그에 맞게 학년 선택 칸·안내 문구·버튼을 바꿔준다. */
+function updateAuthUI() {
+  const name = cleanName($("startNameInput").value);
+  const pwLen = $("startPasswordInput").value.trim().length;
+  const known = name && profileExists(name);
+  const setpw = known && profileNeedsNewPassword(name);
+  const isNewFriend = !known;
+
+  const showPicker = isNewFriend;
+  $("gradeLabel").style.display = (showPicker && !pendingClassCode) ? "" : "none";
+  $("startGrades").style.display = (showPicker && !pendingClassCode) ? "flex" : "none";
+  $("gradeLockMsg").style.display = (showPicker && pendingClassCode) ? "block" : "none";
+  $("btnForgotPw").style.display = (known && !setpw) ? "" : "none";
+
+  if (showPicker) {
+    if (pendingClassCode) {
+      startGrade = pendingGrade;
+      $("gradeLockMsg").textContent = "📚 선생님이 정해주신 " + pendingGrade + "학년 범위로 시작해요";
+    } else {
+      startGrade = startGrade || 0;
+      buildGrades("startGrades", g => { startGrade = g; updateAuthUI(); }, startGrade);
+    }
   } else {
-    buildGrades("startGrades", g => { startGrade = g; $("btnStartEnter").disabled = false; });
+    startGrade = 0; // 다시 온 친구는 학년이 이미 저장돼 있어 새로 고를 필요가 없다
   }
-  $("btnStartEnter").disabled = !startGrade;
+
+  let msg = "";
+  if (!name) msg = "닉네임이랑 비밀번호를 입력해줘.";
+  else if (setpw) msg = "처음 로그인이니 비밀번호를 새로 정해줘(숫자 4자리처럼 쉬운 걸로).";
+  else if (known) msg = j(name, "아", "야") + ", 다시 만나서 반가워! 비밀번호를 입력해줘.";
+  else msg = "처음 보는 닉네임이네! 학년을 고르고 비밀번호를 정해줘.";
+  $("authMsg").textContent = msg;
+
+  $("btnStartEnter").textContent = known && !setpw ? "🐾 이어하기" : "🐾 카페 문 열기";
+  $("btnStartEnter").disabled = !(name && pwLen > 0 && (!isNewFriend || startGrade));
+}
+function openStart() {
+  $("startNameInput").value = getLastName();
+  $("startPasswordInput").value = "";
+  $("authMsg").className = "authMsg";
+  $("forgotPwBox").style.display = "none";
+  updateAuthUI();
   $("startOverlay").classList.add("show");
   setTimeout(() => { try { $("startNameInput").focus(); } catch (e) {} }, 100);
 }
@@ -467,34 +499,102 @@ function buildDex() {
   $("dexCount").textContent = `${found} / ${total}개 발견`;
 }
 
+/* ---------- 문제 범위(3학년 단원 고르기) ----------
+   전작 「멍멍 수학 마을」 설정 화면의 단원 고르기를 그대로 옮겼다.
+   S.topics는 고른 차시 id 배열. 비어있거나 null이면 3학년 전체에서 문제가 나온다. */
+function buildTopics() {
+  const sel = new Set(S.topics && S.topics.length ? S.topics : ALL3);
+  $("topCount").textContent = sel.size + " / " + ALL3.length + " 선택";
+  let h = "", sem = "";
+  for (const u of UNITS3) {
+    if (u.sem !== sem) { sem = u.sem; h += `<div class="semh">3학년 ${sem.endsWith("1") ? "1" : "2"}학기</div>`; }
+    const allOn = u.t.every(([id]) => sel.has(id));
+    h += `<div class="unit"><div class="uh"><b>${u.name}</b>${u.std.map(c => `<span class="std" data-std="${c}">${c}</span>`).join("")}<span class="fill"></span><button class="sbtn" data-unit="${UNITS3.indexOf(u)}" type="button">${allOn ? "단원 해제" : "단원 전체"}</button></div>
+      <div class="tgrid">${u.t.map(([id, n]) => `<button class="tchk${sel.has(id) ? " on" : ""}" data-tid="${id}" type="button"><span class="cb">${sel.has(id) ? "✓" : ""}</span>${n}</button>`).join("")}</div></div>`;
+  }
+  $("topBody").innerHTML = h;
+  $("topBody").querySelectorAll("[data-tid]").forEach(b => b.onclick = () => {
+    const s = new Set(S.topics && S.topics.length ? S.topics : ALL3), id = b.dataset.tid;
+    s.has(id) ? s.delete(id) : s.add(id);
+    S.topics = ALL3.filter(x => s.has(x));
+    saveState(); buildTopics();
+  });
+  $("topBody").querySelectorAll("[data-unit]").forEach(b => b.onclick = () => {
+    const u = UNITS3[+b.dataset.unit], s = new Set(S.topics && S.topics.length ? S.topics : ALL3), on = u.t.every(([id]) => s.has(id));
+    u.t.forEach(([id]) => on ? s.delete(id) : s.add(id));
+    S.topics = ALL3.filter(x => s.has(x));
+    saveState(); buildTopics();
+  });
+  $("topBody").querySelectorAll("[data-std]").forEach(b => b.onclick = () => toast(STD3[b.dataset.std]));
+}
+function openTopics() {
+  if (S.grade !== 3) { toast("단원 고르기는 지금 3학년에서만 돼요."); return; }
+  buildTopics();
+  $("topicsOverlay").classList.add("show");
+  pauseGame();
+}
+function closeTopics() { $("topicsOverlay").classList.remove("show"); resumeGame(); }
+
 /* DOM이 준비된 뒤 main.js의 init()에서 호출 */
 function initMathUI() {
   $("btnStartEnter").onclick = () => {
     const name = cleanName($("startNameInput").value);
-    if (!name || !startGrade) return;
-    const isNew = !S.name;
-    S.name = name; S.grade = startGrade; S.tier = 0;
-    if (pendingClassCode) S.topics = pendingTopics;
+    const password = $("startPasswordInput").value.trim();
+    if (!name || !password) return;
+    const grade = pendingClassCode ? pendingGrade : startGrade;
+    const topics = pendingClassCode ? pendingTopics : null;
+    const result = tryLogin(name, password, grade, topics);
+    if (!result.ok) {
+      $("authMsg").textContent = "비밀번호가 달라요. 다시 한번 확인해줘.";
+      $("authMsg").className = "authMsg bad";
+      $("startPasswordInput").value = "";
+      $("startPasswordInput").focus();
+      return;
+    }
+    if (pendingClassCode) { S.grade = pendingGrade; S.topics = pendingTopics; }
     saveState();
     $("startOverlay").classList.remove("show");
-    resumeGame();
-    renderHud();
+    onLoggedIn();
     syncMyRanking(true);
-    toast(j(name, "아", "야") + (isNew ? ", 어서 와! 수학 문제를 풀어서 첫 에너지를 모아 볼까?" : ", 다시 만나서 반가워!"));
+    if (result.isNew) toast(j(name, "아", "야") + ", 어서 와! 수학 문제를 풀어서 첫 에너지를 모아 볼까?");
+    else if (result.passwordJustSet) toast("비밀번호를 방금 입력한 걸로 정했어요. 다음에도 똑같이 입력해줘!");
+    else toast(j(name, "아", "야") + ", 다시 만나서 반가워!");
   };
-  $("startNameInput").addEventListener("input", () => { $("btnStartEnter").disabled = !(cleanName($("startNameInput").value) && startGrade); });
-  $("startNameInput").addEventListener("keydown", e => { if (e.key === "Enter" && !$("btnStartEnter").disabled) $("btnStartEnter").click(); });
+  $("startNameInput").addEventListener("input", updateAuthUI);
+  $("startPasswordInput").addEventListener("input", updateAuthUI);
+  $("startNameInput").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("startPasswordInput").focus(); } });
+  $("startPasswordInput").addEventListener("keydown", e => { if (e.key === "Enter" && !$("btnStartEnter").disabled) $("btnStartEnter").click(); });
+  $("btnForgotPw").onclick = () => { $("forgotPwBox").style.display = "block"; };
+  $("btnForgotCancel").onclick = () => { $("forgotPwBox").style.display = "none"; };
+  $("btnForgotConfirm").onclick = () => {
+    const name = cleanName($("startNameInput").value);
+    forgetProfile(name);
+    $("forgotPwBox").style.display = "none";
+    $("startPasswordInput").value = "";
+    updateAuthUI();
+    toast(j(name, "이", "가") + " 기록을 지웠어요. 새로 시작해보자!");
+  };
 
   $("btnOpenSettings").onclick = openSettings;
   $("btnCloseSettings").onclick = closeSettings;
   $("btnOpenDex").onclick = openDex;
   $("btnCloseDex").onclick = closeDex;
   $("dexOverlay").addEventListener("click", e => { if (e.target.id === "dexOverlay") closeDex(); });
+  $("btnOpenTopics").onclick = openTopics;
+  $("btnCloseTopics").onclick = closeTopics;
+  $("topDone").onclick = closeTopics;
+  $("topAll").onclick = () => { S.topics = [...ALL3]; saveState(); buildTopics(); };
+  $("topNone").onclick = () => { S.topics = []; saveState(); buildTopics(); };
+  $("topicsOverlay").addEventListener("click", e => { if (e.target.id === "topicsOverlay") closeTopics(); });
+  $("btnSwitchProfile").onclick = () => {
+    skipAutosaveOnUnload = false; // 지금 로그인된 친구 기록은 그대로 저장해두고 로그인 화면으로
+    location.reload();
+  };
   $("btnReset").onclick = () => { $("resetConfirmBox").style.display = "block"; };
   $("btnResetCancel").onclick = () => { $("resetConfirmBox").style.display = "none"; };
   $("btnResetConfirm").onclick = () => {
     skipAutosaveOnUnload = true; // beforeunload가 지우기 전 상태를 되살려 저장하지 않도록
-    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+    forgetProfile(S.name);
     location.reload();
   };
   $("btnMathClose").onclick = closeMath;
