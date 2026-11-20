@@ -58,8 +58,11 @@ function init() {
   migrateGeneratorCells();
   applyLayout();
   initBoard();
+  updateCafeBackground();
   initCustomers();
   initMathUI();
+  initRankingUI();
+  initFirebase();
   renderHud();
   paused = !(S.name && S.grade);
   if (paused) openStart();

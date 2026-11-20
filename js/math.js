@@ -402,11 +402,70 @@ function openStart() {
 }
 function openSettings() {
   buildGrades("gradeSettings", g => { S.grade = g; S.tier = 0; saveState(); toast(g + "학년 문제로 바꿨어요."); });
+  buildGenUpgrades();
   $("resetConfirmBox").style.display = "none";
   $("settingsOverlay").classList.add("show");
   pauseGame();
 }
 function closeSettings() { $("settingsOverlay").classList.remove("show"); resumeGame(); }
+
+/* 생성기 업그레이드 목록 — 해금된 라인만 보여준다. */
+function buildGenUpgrades() {
+  $("genCoinCount").textContent = Math.floor(S.coins);
+  const lines = unlockedLines(S.level);
+  $("genUpgradeList").innerHTML = lines.map(id => {
+    const g = CONFIG.LINES[id];
+    const lvl = S.genUpgrade[id] || 0;
+    const curItem = g.items[1 + lvl];
+    const maxed = lvl >= CONFIG.GEN_UPGRADE_MAX;
+    const cost = maxed ? 0 : CONFIG.GEN_UPGRADE_COST[lvl + 1];
+    const nextItem = maxed ? null : g.items[2 + lvl];
+    return `<div class="genRow">
+      <img src="${assetUrl(g.genFile)}" alt="">
+      <div class="genInfo">
+        <b>${g.name}</b>
+        <span class="genNow">지금: ${lvl + 1}단계 재료</span>
+      </div>
+      ${maxed
+        ? `<span class="genMaxed">최고 단계</span>`
+        : `<button class="genUpBtn" data-line="${id}" ${S.coins < cost ? "disabled" : ""}>업그레이드<br>🪙${cost}</button>`}
+    </div>`;
+  }).join("") || `<div class="genNow">아직 해금된 생성기가 없어요.</div>`;
+  $("genUpgradeList").querySelectorAll(".genUpBtn").forEach(b => b.onclick = () => {
+    const line = b.dataset.line;
+    if (upgradeGenerator(line)) {
+      toast(CONFIG.LINES[line].name + " 생성기를 업그레이드했어요!");
+      buildGenUpgrades();
+    }
+  });
+}
+
+/* ---------- 도감 ---------- */
+function openDex() {
+  buildDex();
+  $("dexOverlay").classList.add("show");
+  pauseGame();
+}
+function closeDex() { $("dexOverlay").classList.remove("show"); resumeGame(); }
+function buildDex() {
+  const lines = Object.keys(CONFIG.LINES);
+  let total = 0, found = 0;
+  const html = lines.map(id => {
+    const g = CONFIG.LINES[id];
+    const arr = S.dex[id] || [];
+    let lineFound = 0;
+    const cells = [];
+    for (let t = 1; t <= CONFIG.ITEM_MAX_TIER; t++) {
+      total++;
+      const discovered = !!arr[t - 1];
+      if (discovered) { found++; lineFound++; }
+      cells.push(`<div class="dexCell${discovered ? " found" : ""}">${discovered ? `<img src="${assetUrl(g.items[t])}" alt="">` : `<span class="dexQ">?</span>`}</div>`);
+    }
+    return `<div class="dexLine"><div class="dexLineHead"><b>${g.name}</b><span>${lineFound}/${CONFIG.ITEM_MAX_TIER}</span></div><div class="dexGrid">${cells.join("")}</div></div>`;
+  }).join("");
+  $("dexBody").innerHTML = html;
+  $("dexCount").textContent = `${found} / ${total}개 발견`;
+}
 
 /* DOM이 준비된 뒤 main.js의 init()에서 호출 */
 function initMathUI() {
@@ -420,6 +479,7 @@ function initMathUI() {
     $("startOverlay").classList.remove("show");
     resumeGame();
     renderHud();
+    syncMyRanking(true);
     toast(j(name, "아", "야") + (isNew ? ", 어서 와! 수학 문제를 풀어서 첫 에너지를 모아 볼까?" : ", 다시 만나서 반가워!"));
   };
   $("startNameInput").addEventListener("input", () => { $("btnStartEnter").disabled = !(cleanName($("startNameInput").value) && startGrade); });
@@ -427,6 +487,9 @@ function initMathUI() {
 
   $("btnOpenSettings").onclick = openSettings;
   $("btnCloseSettings").onclick = closeSettings;
+  $("btnOpenDex").onclick = openDex;
+  $("btnCloseDex").onclick = closeDex;
+  $("dexOverlay").addEventListener("click", e => { if (e.target.id === "dexOverlay") closeDex(); });
   $("btnReset").onclick = () => { $("resetConfirmBox").style.display = "block"; };
   $("btnResetCancel").onclick = () => { $("resetConfirmBox").style.display = "none"; };
   $("btnResetConfirm").onclick = () => {

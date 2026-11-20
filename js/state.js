@@ -29,6 +29,17 @@ function orderRuleForLevel(level) {
   for (const r of CONFIG.ORDER_RULES) if (level >= r.minLevel) best = r;
   return best;
 }
+/* 도감: 그 라인·단계를 처음 만들었으면 true로 표시한다. */
+function markDiscovered(line, tier) {
+  if (!S.dex[line]) return;
+  if (!S.dex[line][tier - 1]) { S.dex[line][tier - 1] = true; return true; }
+  return false;
+}
+function cafeBgKeyForLevel(level) {
+  let best = CONFIG.CAFE_BG_LEVELS[0].key;
+  for (const r of CONFIG.CAFE_BG_LEVELS) if (level >= r.minLevel) best = r.key;
+  return best;
+}
 
 function freshState() {
   const grid = [];
@@ -55,7 +66,14 @@ function freshState() {
     exp: 0,
     energy: CONFIG.ENERGY_START,
     board: grid,
-    today: { date: todayStr(), solved: 0, correct: 0 },
+    genUpgrade: { coffee: 0, fruit: 0, cookie: 0, cake: 0 }, // 생성기 업그레이드 단계(0~GEN_UPGRADE_MAX)
+    dex: { // 라인별로 한 번이라도 만들어본 단계(도감)
+      coffee: [true, false, false, false, false, false], // 시작할 때부터 보드에 1단계가 있어 발견 처리
+      fruit: [false, false, false, false, false, false],
+      cookie: [false, false, false, false, false, false],
+      cake: [false, false, false, false, false, false],
+    },
+    today: { date: todayStr(), solved: 0, correct: 0, served: 0 },
     seenEnergyHint: false,
   };
 }
@@ -71,8 +89,9 @@ function loadState() {
   if (loaded) {
     S = Object.assign(freshState(), loaded);
     if (!S.today || S.today.date !== todayStr()) {
-      S.today = { date: todayStr(), solved: 0, correct: 0 };
+      S.today = { date: todayStr(), solved: 0, correct: 0, served: 0 };
     }
+    if (typeof S.today.served !== "number") S.today.served = 0; // 이 기능 전에 저장된 당일 기록 호환
     // 라인 추가 전 저장 데이터 호환: {tier}만 있던 칸은 커피로 간주
     if (S.board) {
       for (const row of S.board) {

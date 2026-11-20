@@ -4,17 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>멍멍 카페</title>
-<link rel="stylesheet" href="css/style.css?v=12">
+<link rel="stylesheet" href="css/style.css?v=22">
 </head>
 <body>
 <div id="stageWrap">
   <div id="stage">
-    <img id="layerBg" src="assets/bg/bg_cafe_lv1.png?v=12" alt="">
-    <img id="layerBgLandscape" src="assets/bg/bg_cafe_lv1_landscape.png?v=12" alt="">
+    <img id="layerBg" src="assets/bg/bg_cafe_lv1.png?v=22" alt="">
+    <img id="layerBgLandscape" src="assets/bg/bg_cafe_lv1_landscape.png?v=22" alt="">
     <div id="customerLayer"></div>
-    <img id="layerCounterCover" src="assets/bg/bg_cafe_lv1.png?v=12" alt="">
-    <img id="layerCounterCoverLandscape" src="assets/bg/bg_cafe_lv1_landscape.png?v=12" alt="">
-    <div id="baristaWrap"><img id="baristaEl" src="assets/barista/barista_idle.png?v=12" alt="바리스타"></div>
+    <img id="layerCounterCover" src="assets/bg/bg_cafe_lv1.png?v=22" alt="">
+    <img id="layerCounterCoverLandscape" src="assets/bg/bg_cafe_lv1_landscape.png?v=22" alt="">
+    <div id="baristaWrap"><img id="baristaEl" src="assets/barista/barista_idle.png?v=22" alt="바리스타"></div>
     <div id="bubbleLayer"></div>
 
     <div id="boardPanel"></div>
@@ -23,9 +23,11 @@
     <div id="boardItems"></div>
 
     <div id="hud">
-      <div class="pill" id="pillCoin"><img src="assets/ui/ui_coin.png?v=12" alt=""><span id="hudCoin">0</span></div>
-      <div class="pill" id="pillLevel"><img src="assets/ui/ui_star.png?v=12" alt=""><span id="hudLevel">Lv.1</span><div class="expBar"><div class="expFill" id="hudExpFill"></div></div></div>
-      <div class="pill" id="pillEnergy"><img src="assets/ui/ui_energy.png?v=12" alt=""><span id="hudEnergy">10/60</span><button id="btnEnergyPlus" class="energyPlus" type="button">＋</button></div>
+      <div class="pill" id="pillCoin"><img src="assets/ui/ui_coin.png?v=22" alt=""><span id="hudCoin">0</span></div>
+      <div class="pill" id="pillLevel"><img src="assets/ui/ui_star.png?v=22" alt=""><span id="hudLevel">Lv.1</span><div class="expBar"><div class="expFill" id="hudExpFill"></div></div></div>
+      <div class="pill" id="pillEnergy"><img src="assets/ui/ui_energy.png?v=22" alt=""><span id="hudEnergy">10/60</span><button id="btnEnergyPlus" class="energyPlus" type="button">＋</button></div>
+      <button id="btnOpenDex" class="settingsBtn" type="button">📖</button>
+      <button id="btnOpenRanking" class="settingsBtn" type="button">🏆</button>
       <button id="btnOpenSettings" class="settingsBtn" type="button">⚙</button>
     </div>
     <div class="pill todayPill" id="hudToday">오늘 0/10문제</div>
@@ -54,6 +56,8 @@
         <h2>설정</h2>
         <div class="fieldLabel">학년</div>
         <div class="grades" id="gradeSettings"></div>
+        <div class="fieldLabel">생성기 업그레이드 <span class="genCoinHint">🪙 <b id="genCoinCount">0</b></span></div>
+        <div id="genUpgradeList"></div>
         <div class="settingsRow">
           <span>처음부터 다시 하기</span>
           <button class="dangerBtn" id="btnReset" type="button">초기화</button>
@@ -65,6 +69,29 @@
             <button id="btnResetConfirm" class="dangerBtn" type="button">네, 지워요</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- 도감 -->
+    <div class="overlay" id="dexOverlay">
+      <div class="card dexCard">
+        <button class="closeBtn" id="btnCloseDex" type="button">✕</button>
+        <h2>도감</h2>
+        <div class="dexCount" id="dexCount"></div>
+        <div id="dexBody"></div>
+      </div>
+    </div>
+
+    <!-- 랭킹 -->
+    <div class="overlay" id="rankingOverlay">
+      <div class="card rankingCard">
+        <button class="closeBtn" id="btnCloseRanking" type="button">✕</button>
+        <h2>카페 랭킹</h2>
+        <div class="rankingTabs" id="rankingTabs">
+          <button data-tab="level" class="on" type="button">레벨순</button>
+          <button data-tab="coins" type="button">자산순</button>
+        </div>
+        <div id="rankingBody"></div>
       </div>
     </div>
 
@@ -96,13 +123,19 @@
     </div>
   </div>
 </div>
-<script src="js/config.js?v=12"></script>
-<script src="js/state.js?v=12"></script>
-<script src="js/curriculum.js?v=12"></script>
-<script src="js/board.js?v=12"></script>
-<script src="js/customers.js?v=12"></script>
-<script src="js/math.js?v=12"></script>
-<script src="js/ui.js?v=12"></script>
-<script src="js/main.js?v=12"></script>
+<!-- 카페 랭킹용(선택): Firebase가 설정 안 됐으면 ranking.js가 조용히 꺼진 채로 동작한다 -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<script src="js/config.js?v=22"></script>
+<script src="js/state.js?v=22"></script>
+<script src="js/curriculum.js?v=22"></script>
+<script src="js/board.js?v=22"></script>
+<script src="js/customers.js?v=22"></script>
+<script src="js/math.js?v=22"></script>
+<script src="js/ui.js?v=22"></script>
+<script src="js/ranking.js?v=22"></script>
+<script src="js/main.js?v=22"></script>
 </body>
 </html>

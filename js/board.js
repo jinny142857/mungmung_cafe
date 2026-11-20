@@ -84,7 +84,7 @@ function makeItemEl(row, col, item) {
   const el = document.createElement("img");
   el.src = assetUrl(CONFIG.LINES[item.line].items[item.tier]);
   el.alt = "";
-  el.className = "boardItem" + (item.tier === 8 ? " glow" : "");
+  el.className = "boardItem" + (item.tier === CONFIG.ITEM_MAX_TIER ? " glow" : "");
   el.style.width = size + "px";
   el.style.height = size + "px";
   positionItemInCell(el, row, col, size);
@@ -191,16 +191,31 @@ function resolveDrop(drag, pt) {
   if (!target) {
     S.board[cell.row][cell.col] = { line: drag.line, tier: drag.tier };
     S.board[drag.row][drag.col] = null;
-  } else if (target.line === drag.line && target.tier === drag.tier && drag.tier < 8) {
-    S.board[cell.row][cell.col] = { line: drag.line, tier: drag.tier + 1 };
+  } else if (target.line === drag.line && target.tier === drag.tier && drag.tier < CONFIG.ITEM_MAX_TIER) {
+    const newTier = drag.tier + 1;
+    S.board[cell.row][cell.col] = { line: drag.line, tier: newTier };
     S.board[drag.row][drag.col] = null;
     playMergeEffect(cell.row, cell.col);
+    if (markDiscovered(drag.line, newTier)) toast("📖 도감에 새 메뉴가 추가됐어요!");
   } else {
     const tmp = S.board[cell.row][cell.col];
     S.board[cell.row][cell.col] = S.board[drag.row][drag.col];
     S.board[drag.row][drag.col] = tmp;
   }
   saveState(); renderBoardItems();
+}
+
+/* ---------- 생성기 업그레이드 ---------- */
+function canUpgradeGenerator(line) { return (S.genUpgrade[line] || 0) < CONFIG.GEN_UPGRADE_MAX; }
+function upgradeGeneratorCost(line) { return CONFIG.GEN_UPGRADE_COST[(S.genUpgrade[line] || 0) + 1]; }
+function upgradeGenerator(line) {
+  if (!canUpgradeGenerator(line)) return false;
+  const cost = upgradeGeneratorCost(line);
+  if (S.coins < cost) return false;
+  S.coins -= cost;
+  S.genUpgrade[line] = (S.genUpgrade[line] || 0) + 1;
+  saveState(); renderHud();
+  return true;
 }
 
 /* ---------- 생성기 ---------- */
@@ -223,8 +238,10 @@ function onGeneratorPointerDown(e, line) {
   const cell = nearestEmptyCellToGenerator(line);
   if (!cell) { toast("보드가 가득 찼어요"); shakeGenerator(line); return; }
   S.energy -= CONFIG.ENERGY_PER_TAP;
-  const tier = Math.random() < CONFIG.GEN_DROP_RATE[1] ? 1 : 2;
+  const base = 1 + (S.genUpgrade[line] || 0);
+  const tier = Math.random() < CONFIG.GEN_DROP_RATE[1] ? base : base + 1;
   S.board[cell.row][cell.col] = { line, tier };
+  if (markDiscovered(line, tier)) toast("📖 도감에 새 메뉴가 추가됐어요!");
   saveState(); renderBoardItems(); renderHud();
   popGeneratedItem(cell.row, cell.col);
 }

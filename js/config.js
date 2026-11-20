@@ -4,7 +4,7 @@
 const CONFIG = {
   // 그림 파일을 같은 이름으로 다시 올렸을 때 브라우저가 옛날 캐시를 쓰지 않도록 붙이는 숫자.
   // 그림을 바꿀 때마다 1씩 올린다.
-  ASSET_V: 12,
+  ASSET_V: 22,
 
   // 에너지
   ENERGY_MAX: 60,
@@ -15,6 +15,8 @@ const CONFIG = {
 
   // 오늘의 학습 목표
   DAILY_GOAL: 10,
+  DAILY_SERVE_GOAL: 5,        // 오늘의 미션: 손님 몇 명 서빙하면
+  DAILY_SERVE_BONUS_COINS: 50, // 달성 보너스 코인
 
   // 난이도(단계) 조정 — 3학년은 단원 선택 방식이라 적용하지 않음
   TIER_UP_STREAK: 3,   // 연속 정답 n문제마다 단계 +1
@@ -25,14 +27,23 @@ const CONFIG = {
   BOARD_COLS: 7,
 
   // 생성기
-  GEN_DROP_RATE: { 1: 0.85, 2: 0.15 }, // 나오는 아이템 단계별 확률
+  GEN_DROP_RATE: { 1: 0.85, 2: 0.15 }, // 나오는 아이템 단계별 확률(생성기 기본 단계 대비 +0/+1)
 
-  // 아이템 단계(1~8)별 칸 대비 표시 크기 — 라인 공통
-  ITEM_SCALE: { 1: 0.60, 2: 0.60, 3: 0.75, 4: 0.75, 5: 0.75, 6: 0.90, 7: 0.90, 8: 0.90 },
+  // 생성기 업그레이드: 코인을 내면 생성기가 뱉는 재료의 기본 단계가 올라간다.
+  // 레벨0(기본)=1단계, 레벨1=2단계, 레벨2=3단계. GEN_UPGRADE_COST[n]은 "레벨 n으로 올리는" 비용.
+  GEN_UPGRADE_MAX: 2,
+  GEN_UPGRADE_COST: { 1: 150, 2: 500 },
+
+  // 라인마다 8종 그림 중 6개를 골라 1~6단계로 쓴다. 8단계는 만들어도 손님이 절대 주문하지
+  // 않아 "장식용"이 되는 문제가 있어서, 6단계로 줄이고 그 대신 6단계까지는 반드시 주문에 쓰이게 했다.
+  ITEM_MAX_TIER: 6,
+
+  // 아이템 단계(1~6)별 칸 대비 표시 크기 — 라인 공통
+  ITEM_SCALE: { 1: 0.60, 2: 0.60, 3: 0.75, 4: 0.75, 5: 0.90, 6: 0.90 },
 
   // 단계별 서빙 보상(코인/경험치) — 라인 공통. 1,2단계는 완성 음료가 아니라 서빙 불가
-  SERVE_COIN: { 3: 10, 4: 18, 5: 30, 6: 50, 7: 80, 8: 130 },
-  SERVE_EXP:  { 3: 3,  4: 5,  5: 8,  6: 12, 7: 18, 8: 30 },
+  SERVE_COIN: { 3: 10, 4: 20, 5: 40, 6: 70 },
+  SERVE_EXP:  { 3: 3,  4: 6,  5: 12, 6: 20 },
 
   // 팁
   TIP_PATIENCE_RATIO: 0.6, // 완료 순간 인내심이 이 비율을 넘으면
@@ -45,59 +56,51 @@ const CONFIG = {
   // 라인: 생성기 위치(행·열, 7x7 보드 기준)와 해금 레벨, 아이템 그림
   LINES: {
     coffee: {
-      unlockLevel: 1, genRow: 6, genCol: 3,
+      name: "커피", unlockLevel: 1, genRow: 6, genCol: 3,
       genFile: "assets/generators/gen_coffee_lv1.png",
-      items: {
+      items: { // 커피콩 → 에스프레소 → 라떼 → 바닐라라떼 → 카라멜마키아토 → 시그니처(선생님이 고른 6단계)
         1: "assets/items/item_coffee_01_bean.png",
-        2: "assets/items/item_coffee_02_beansack.png",
-        3: "assets/items/item_coffee_03_espresso.png",
-        4: "assets/items/item_coffee_04_americano.png",
-        5: "assets/items/item_coffee_05_latte.png",
-        6: "assets/items/item_coffee_06_vanilla_latte.png",
-        7: "assets/items/item_coffee_07_caramel_macchiato.png",
-        8: "assets/items/item_coffee_08_signature_cloud_latte.png",
+        2: "assets/items/item_coffee_03_espresso.png",
+        3: "assets/items/item_coffee_05_latte.png",
+        4: "assets/items/item_coffee_06_vanilla_latte.png",
+        5: "assets/items/item_coffee_07_caramel_macchiato.png",
+        6: "assets/items/item_coffee_08_signature_cloud_latte.png",
       },
     },
     fruit: {
-      unlockLevel: 3, genRow: 6, genCol: 1,
+      name: "과일음료", unlockLevel: 3, genRow: 6, genCol: 1,
       genFile: "assets/generators/gen_fruit_lv1.png",
-      items: {
-        1: "assets/items/item_fruit_01_strawberry.png",
-        2: "assets/items/item_fruit_02_basket.png",
-        3: "assets/items/item_fruit_03_strawberry_milk.png",
-        4: "assets/items/item_fruit_04_orange_juice.png",
-        5: "assets/items/item_fruit_05_kiwi_smoothie.png",
-        6: "assets/items/item_fruit_06_watermelon_ade.png",
-        7: "assets/items/item_fruit_07_rainbow_ade.png",
-        8: "assets/items/item_fruit_08_unicorn_soda.png",
+      items: { // 과일바구니 → 딸기우유 → 오렌지주스 → 수박에이드 → 무지개에이드 → 유니콘소다
+        1: "assets/items/item_fruit_02_basket.png",
+        2: "assets/items/item_fruit_03_strawberry_milk.png",
+        3: "assets/items/item_fruit_04_orange_juice.png",
+        4: "assets/items/item_fruit_06_watermelon_ade.png",
+        5: "assets/items/item_fruit_07_rainbow_ade.png",
+        6: "assets/items/item_fruit_08_unicorn_soda.png",
       },
     },
     cookie: {
-      unlockLevel: 5, genRow: 6, genCol: 5,
+      name: "쿠키", unlockLevel: 5, genRow: 6, genCol: 5,
       genFile: "assets/generators/gen_cookie_lv1.png",
-      items: {
-        1: "assets/items/item_cookie_01_flour.png",
-        2: "assets/items/item_cookie_02_dough.png",
-        3: "assets/items/item_cookie_03_butter_cookie.png",
-        4: "assets/items/item_cookie_04_chocochip_stack.png",
-        5: "assets/items/item_cookie_05_paw_cookie.png",
-        6: "assets/items/item_cookie_06_macaron_tray.png",
-        7: "assets/items/item_cookie_07_macaron_tower.png",
-        8: "assets/items/item_cookie_08_gingerbread_house.png",
+      items: { // 반죽 → 버터쿠키 → 초코칩쿠키 → 강아지발바닥쿠키 → 마카롱트레이 → 진저브레드하우스
+        1: "assets/items/item_cookie_02_dough.png",
+        2: "assets/items/item_cookie_03_butter_cookie.png",
+        3: "assets/items/item_cookie_04_chocochip_stack.png",
+        4: "assets/items/item_cookie_05_paw_cookie.png",
+        5: "assets/items/item_cookie_06_macaron_tray.png",
+        6: "assets/items/item_cookie_08_gingerbread_house.png",
       },
     },
     cake: {
-      unlockLevel: 8, genRow: 0, genCol: 3,
+      name: "케이크", unlockLevel: 8, genRow: 0, genCol: 3,
       genFile: "assets/generators/gen_cake_lv1.png",
-      items: {
-        1: "assets/items/item_cake_01_egg.png",
-        2: "assets/items/item_cake_02_batter_bowl.png",
-        3: "assets/items/item_cake_03_cupcake.png",
-        4: "assets/items/item_cake_04_cake_slice.png",
-        5: "assets/items/item_cake_05_strawberry_shortcake.png",
-        6: "assets/items/item_cake_06_choco_drip_cake.png",
-        7: "assets/items/item_cake_07_shiba_cake.png",
-        8: "assets/items/item_cake_08_party_cake.png",
+      items: { // 반죽볼 → 컵케이크 → 케이크조각 → 초코드립케이크 → 강아지케이크 → 파티케이크
+        1: "assets/items/item_cake_02_batter_bowl.png",
+        2: "assets/items/item_cake_03_cupcake.png",
+        3: "assets/items/item_cake_04_cake_slice.png",
+        4: "assets/items/item_cake_06_choco_drip_cake.png",
+        5: "assets/items/item_cake_07_shiba_cake.png",
+        6: "assets/items/item_cake_08_party_cake.png",
       },
     },
   },
@@ -109,13 +112,23 @@ const CONFIG = {
     cake: "🎂 케이크 레시피가 열렸어요!",
   },
 
+  // 카페 모습(배경)이 레벨에 따라 바뀐다 — design-guide.md 표와 같은 구간.
+  // 파일: assets/bg/bg_cafe_{key}.png, bg_cafe_{key}_landscape.png
+  // 아직 안 만든 레벨의 그림은 lv1으로 자동 대체된다(ui.js의 setCafeBgImg 참고).
+  CAFE_BG_LEVELS: [
+    { minLevel: 1, key: "lv1", desc: "작은 포장마차 카페" },
+    { minLevel: 3, key: "lv2", desc: "작은 매장 + 테이블 2개" },
+    { minLevel: 5, key: "lv3", desc: "베이커리 진열장 추가" },
+    { minLevel: 8, key: "lv4", desc: "2층 테라스 카페" },
+  ],
+
   // 레벨별 주문 규칙 — 해당 레벨 이상에서 적용되는 규칙 중 가장 높은 것을 쓴다.
   // counts: 주문 아이템 개수를 이 목록에서 고르게 뽑는다(예: [1,1,2] = 1개 2/3, 2개 1/3 확률).
   ORDER_RULES: [
     { minLevel: 1, tierMin: 3, tierMax: 4, counts: [1] },
     { minLevel: 3, tierMin: 3, tierMax: 5, counts: [1, 1, 1, 2] },
-    { minLevel: 5, tierMin: 3, tierMax: 5, counts: [1, 1, 2, 2] },
-    { minLevel: 8, tierMin: 3, tierMax: 6, counts: [1, 1, 2, 2, 3] },
+    { minLevel: 5, tierMin: 4, tierMax: 6, counts: [1, 1, 2, 2] },
+    { minLevel: 8, tierMin: 4, tierMax: 6, counts: [1, 1, 2, 2, 3] },
   ],
 
   // 손님
@@ -177,10 +190,10 @@ CONFIG.LAYOUTS = {
     BOARD_PANEL_RIGHT: 1420,
     BOARD_PANEL_BOTTOM: 960,
     CUSTOMER_BODY_SIZE: 150,
-    CUSTOMER_SLOTS: [{ x: 95, y: 470 }, { x: 280, y: 470 }, { x: 465, y: 470 }],
+    CUSTOMER_SLOTS: [{ x: 95, y: 438 }, { x: 280, y: 438 }, { x: 465, y: 438 }],
     CUSTOMER_HIT_HALF_WIDTH: 90,
-    CUSTOMER_HIT_TOP: 260,
-    CUSTOMER_HIT_BOTTOM: 660,
+    CUSTOMER_HIT_TOP: 230,
+    CUSTOMER_HIT_BOTTOM: 630,
     CUSTOMER_BUBBLE_TOP: 300,
     CUSTOMER_BUBBLE_WIDTH: 170,
     CUSTOMER_SLIDE_OFFSET: 380,

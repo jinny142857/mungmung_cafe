@@ -181,6 +181,7 @@ function tryServeCustomer(cust, line, tier) {
 
 function gainExp(amount) {
   if (S.level >= CONFIG.LEVEL_MAX) return;
+  const levelBefore = S.level;
   S.exp += amount;
   const unlocked = [];
   while (S.level < CONFIG.LEVEL_MAX && S.exp >= CONFIG.LEVEL_EXP_TO_NEXT[S.level]) {
@@ -195,6 +196,7 @@ function gainExp(amount) {
     initBoard(); // 새로 열린 생성기 칸의 배경(gen-cell)까지 함께 다시 그린다
     unlocked.forEach((id, i) => setTimeout(() => toast(CONFIG.LINE_UNLOCK_MSG[id]), 1600 + i * 1500));
   }
+  if (S.level !== levelBefore) { updateCafeBackground(); syncMyRanking(true); } // 레벨이 바뀌면 배경도, 랭킹도 바로 갱신
 }
 
 function completeOrder(cust) {
@@ -206,10 +208,16 @@ function completeOrder(cust) {
   if (ratio > CONFIG.TIP_PATIENCE_RATIO) { coins = Math.round(coins * (1 + CONFIG.TIP_BONUS_RATIO)); tipped = true; }
   S.coins += coins;
   gainExp(exp);
+  S.today.served++;
+  if (S.today.served === CONFIG.DAILY_SERVE_GOAL) {
+    S.coins += CONFIG.DAILY_SERVE_BONUS_COINS;
+    setTimeout(() => toast(`🏅 오늘 손님 ${CONFIG.DAILY_SERVE_GOAL}명 서빙 달성! 코인 +${CONFIG.DAILY_SERVE_BONUS_COINS}`), 600);
+  }
   cust.face = "happy"; updateCustomerFace(cust);
   if (tipped) floatTipBadge(cust);
   baristaServe();
   saveState(); renderHud();
+  syncMyRanking();
   setTimeout(() => leaveCustomer(cust, "happy"), CONFIG.FACE_HAPPY_DURATION * 1000);
 }
 
