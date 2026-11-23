@@ -57,7 +57,7 @@ function onLoggedIn() {
   applyLayout();
   initBoard();
   updateCafeBackground();
-  relayoutCustomers();
+  initCustomers(); // 로그인한 친구의 실제 레벨에 맞는 손님 등장 속도로 다시 맞춘다
   renderHud();
   resumeGame();
 }
@@ -67,6 +67,7 @@ function init() {
   readLinkSettings();
   applyLayout();
   initBoard();
+  initBoardTapSelect();
   initCustomers();
   initMathUI();
   initRankingUI();

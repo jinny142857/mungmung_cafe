@@ -17,7 +17,7 @@
   --pink:#e58a8a;
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;background:#000;font-family:'OngleipParkDahyeon',"Noto Sans KR",system-ui,sans-serif;color:var(--ink);-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:#000;font-family:'OngleipParkDahyeon',"Noto Sans KR",system-ui,sans-serif;color:var(--ink);-webkit-tap-highlight-color:transparent;touch-action:none;overscroll-behavior:none}
 button{font-family:inherit;cursor:pointer;color:inherit}
 img{-webkit-user-drag:none;user-select:none}
 
@@ -56,9 +56,9 @@ img{-webkit-user-drag:none;user-select:none}
 #stage.landscape .tipBadge{font-size:24px}
 
 /* ---------- 손님 ---------- */
-.customerSpriteBox{position:absolute;transition:transform .4s ease-out}
+.customerSpriteBox{position:absolute;transition:transform .4s ease-out;touch-action:none}
 .customerSprite{width:100%;height:100%;display:block}
-.customerBubbleBox{position:absolute;top:235px;width:300px;display:flex;justify-content:center;transition:transform .4s ease-out}
+.customerBubbleBox{position:absolute;top:235px;width:300px;display:flex;justify-content:center;transition:transform .4s ease-out;touch-action:none}
 .orderBubble{
   position:relative;background:#fff;border:4px solid var(--brown);border-radius:28px;
   padding:14px 20px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;
@@ -94,14 +94,23 @@ img{-webkit-user-drag:none;user-select:none}
 #boardCells{z-index:7}
 #generators{z-index:8}
 #boardItems{z-index:9}
-.cell{position:absolute;background:var(--cream);border:3px solid var(--line);border-radius:18px}
+.cell{position:absolute;background:var(--cream);border:3px solid var(--line);border-radius:18px;touch-action:none}
 .cell.gen-cell{background:transparent;border-color:transparent}
 .cell.drop-target{border-color:#7aa65a;box-shadow:0 0 0 4px rgba(122,166,90,.3) inset}
 .generatorImg{position:absolute;cursor:pointer;touch-action:none;pointer-events:auto;opacity:.88;transition:opacity .15s}
 .generatorImg:active{opacity:1}
 .generatorImg.shake{animation:shake .3s}
+.genBadge{
+  position:absolute;z-index:1;pointer-events:auto;touch-action:manipulation;
+  min-width:56px;height:30px;padding:0 10px;border-radius:15px;border:2px solid #fff;
+  background:#b8860b;color:#fff;font-family:inherit;font-weight:700;font-size:16px;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 rgba(0,0,0,.25);
+}
+.genBadge.afford{background:var(--green);box-shadow:0 3px 0 var(--green-d)}
 .boardItem{position:absolute;touch-action:none;cursor:grab;transition:left .15s ease,top .15s ease;pointer-events:auto}
 .boardItem.dragging{transition:none;cursor:grabbing;transform:scale(1.1)}
+.boardItem.selected{outline:4px solid #7aa65a;outline-offset:-2px;box-shadow:0 0 0 6px rgba(122,166,90,.3);border-radius:12px;animation:selectedPulse 1s ease-in-out infinite}
+@keyframes selectedPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 .boardItem.spawn-pop{animation:spawnPop .26s ease-out}
 .boardItem.merge-pop{animation:mergePop .22s ease-out}
 .boardItem.glow{animation:goldGlow 2s ease-in-out infinite}

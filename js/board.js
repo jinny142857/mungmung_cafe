@@ -1,6 +1,10 @@
-/* 멍멍 카페 — 보드, 드래그, 머지 */
+/* 멍멍 카페 — 보드, 드래그, 머지
+   드래그로 옮기는 것 말고, 아이템을 톡 눌러서 고른 뒤(선택 표시) 다른 칸을 또 눌러서
+   머지·이동·서빙하는 "순차 터치" 방식도 된다. 손가락으로 드래그가 서툰 아이들을 위한 것. */
 
 let dragState = null;
+let selectedCell = null; // {row,col,line,tier} — 순차 터치로 고른 아이템
+const TAP_MOVE_PX = 12;  // 이 거리 이하로 움직이면 드래그가 아니라 "톡 누르기"로 본다
 
 function cellLeft(col) { const L = layout(); return L.BOARD_ORIGIN_X + col * (L.BOARD_CELL + L.BOARD_GAP); }
 function cellTop(row) { const L = layout(); return L.BOARD_ORIGIN_Y + row * (L.BOARD_CELL + L.BOARD_GAP); }
@@ -28,6 +32,7 @@ function migrateGeneratorCells() {
 }
 
 function initBoard() {
+  selectedCell = null; // 보드를 통째로 다시 그릴 때는 눈에 안 보이는 선택이 남지 않게 한다
   const L = layout();
   const panel = $("boardPanel");
   panel.style.left = L.BOARD_PANEL_LEFT + "px";
@@ -52,7 +57,9 @@ function initBoard() {
   renderBoardItems();
 }
 
-/* 해금된 생성기들을 다시 그린다 (레벨업으로 새 라인이 열릴 때도 호출). */
+/* 해금된 생성기들을 다시 그린다 (레벨업으로 새 라인이 열릴 때도 호출).
+   생성기 오른쪽 위에 업그레이드 배지(🪙가격)를 같이 그려서, 설정 화면을 몰라도
+   생성기 자리에서 바로 업그레이드할 수 있게 한다. */
 function renderGenerators() {
   const L = layout();
   const wrap = $("generators");
@@ -70,7 +77,37 @@ function renderGenerators() {
     el.style.height = L.BOARD_CELL + "px";
     el.onpointerdown = e => onGeneratorPointerDown(e, id);
     wrap.appendChild(el);
+
+    const badge = document.createElement("button");
+    badge.type = "button";
+    badge.className = "genBadge";
+    badge.dataset.line = id;
+    badge.style.left = (cellLeft(g.genCol) + L.BOARD_CELL - 30) + "px";
+    badge.style.top = (cellTop(g.genRow) - 16) + "px";
+    badge.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); onGenBadgeTap(id); };
+    wrap.appendChild(badge);
   });
+  updateGenBadges();
+}
+/* 생성기 업그레이드 배지 — 코인·업그레이드 단계가 바뀔 때마다 다시 부른다(renderHud에서 호출). */
+function updateGenBadges() {
+  $("generators").querySelectorAll(".genBadge").forEach(b => {
+    const line = b.dataset.line;
+    if (!canUpgradeGenerator(line)) { b.style.display = "none"; return; }
+    const cost = upgradeGeneratorCost(line);
+    b.style.display = "flex";
+    b.textContent = "🪙" + cost;
+    b.classList.toggle("afford", S.coins >= cost);
+  });
+}
+function onGenBadgeTap(line) {
+  if (!canUpgradeGenerator(line)) return;
+  const cost = upgradeGeneratorCost(line);
+  if (S.coins < cost) { toast("코인이 더 필요해요 (🪙" + cost + ")"); return; }
+  if (upgradeGenerator(line)) {
+    toast(CONFIG.LINES[line].name + " 생성기를 업그레이드했어요! 이제 더 완성된 재료가 나와요.");
+    updateGenBadges();
+  }
 }
 
 function positionItemInCell(el, row, col, size) {
@@ -105,17 +142,29 @@ function renderBoardItems() {
   }
 }
 
-/* ---------- 드래그 ---------- */
+/* ---------- 드래그 + 순차 터치 ---------- */
 function onItemPointerDown(e) {
   if (mathOpen || dragState) return;
-  e.preventDefault();
   const el = e.currentTarget;
   const row = +el.dataset.row, col = +el.dataset.col, line = el.dataset.line, tier = +el.dataset.tier;
+
+  // 이미 고른(선택된) 아이템이 있는 상태에서 다른 칸을 눌렀다 — 바로 머지·이동·교체를 시도한다.
+  if (selectedCell) {
+    e.preventDefault(); e.stopPropagation();
+    const drag = selectedCell;
+    clearSelection();
+    if (drag.row === row && drag.col === col) return; // 같은 아이템을 다시 누르면 선택 해제
+    if (selectionStillValid(drag)) resolveDrop(drag, clientToStage(e.clientX, e.clientY));
+    return;
+  }
+
+  e.preventDefault();
   const pt = clientToStage(e.clientX, e.clientY);
   dragState = {
     row, col, line, tier, el,
     offsetX: pt.x - parseFloat(el.style.left),
     offsetY: pt.y - parseFloat(el.style.top),
+    startX: e.clientX, startY: e.clientY,
   };
   el.classList.add("dragging");
   el.style.zIndex = 60;
@@ -142,8 +191,42 @@ function onItemPointerUp(e) {
   el.classList.remove("dragging");
   el.style.zIndex = "";
   clearDropHighlight();
+  const moved = Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY) > TAP_MOVE_PX;
+  if (!moved) { selectItem(drag.row, drag.col, drag.line, drag.tier); return; } // 움직이지 않았으면 드래그가 아니라 "고르기"
   const pt = clientToStage(e.clientX, e.clientY);
   resolveDrop(drag, pt);
+}
+
+/* 아이템을 톡 눌러서 고른다. 다음에 다른 칸을 누르면 그 칸으로 머지·이동·서빙된다. */
+function selectItem(row, col, line, tier) {
+  clearSelectionHighlight();
+  selectedCell = { row, col, line, tier };
+  const el = $("boardItems").querySelector(`[data-row="${row}"][data-col="${col}"]`);
+  if (el) el.classList.add("selected");
+}
+function clearSelectionHighlight() {
+  $("boardItems").querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+}
+function clearSelection() {
+  clearSelectionHighlight();
+  selectedCell = null;
+}
+/* 그 사이 보드가 바뀌어서(레벨업 등) 고른 아이템이 더 이상 그 자리에 없으면 무시한다. */
+function selectionStillValid(drag) {
+  const cell = S.board[drag.row] && S.board[drag.row][drag.col];
+  return !!cell && cell.line === drag.line && cell.tier === drag.tier;
+}
+/* 빈칸이나 손님처럼 자기 pointerdown이 없는 자리를 눌렀을 때(버블링으로 stage까지 올라옴) 처리한다. */
+function onStageTapForSelection(e) {
+  if (!selectedCell || paused || mathOpen) return;
+  const pt = clientToStage(e.clientX, e.clientY);
+  if (!hitTestCustomer(pt) && !hitTestCell(pt)) return;
+  const drag = selectedCell;
+  clearSelection();
+  if (selectionStillValid(drag)) resolveDrop(drag, pt);
+}
+function initBoardTapSelect() {
+  $("stage").addEventListener("pointerdown", onStageTapForSelection);
 }
 
 function hitTestCell(pt) {

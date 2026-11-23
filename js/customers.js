@@ -5,7 +5,7 @@
 
 let customers = [];
 let nextCustomerId = 1;
-let spawnTimer = CONFIG.CUSTOMER_FIRST_DELAY;
+let spawnTimer = 0;
 
 function spriteId(id) { return "custSprite-" + id; }
 function bubbleId(id) { return "custBubble-" + id; }
@@ -14,7 +14,7 @@ function initCustomers() {
   $("customerLayer").innerHTML = "";
   $("bubbleLayer").innerHTML = "";
   customers = [];
-  spawnTimer = CONFIG.CUSTOMER_FIRST_DELAY;
+  spawnTimer = customerSpawnRuleForLevel(S.level).firstDelay;
 }
 
 function customerSrc(species, face) { return assetUrl(`assets/customers/cust_${species}_${face}.png`); }
@@ -65,7 +65,8 @@ function spawnCustomer() {
     S.seenEnergyHint = true; saveState();
     setTimeout(() => toast("문제를 풀어 에너지를 모아요!"), 500);
   }
-  spawnTimer = rand(CONFIG.CUSTOMER_RESPAWN_MIN, CONFIG.CUSTOMER_RESPAWN_MAX);
+  const spawnRule = customerSpawnRuleForLevel(S.level);
+  spawnTimer = rand(spawnRule.respawnMin, spawnRule.respawnMax);
 }
 
 function tickCustomers(dt) {

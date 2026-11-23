@@ -34,6 +34,11 @@ function orderRuleForLevel(level) {
   for (const r of CONFIG.ORDER_RULES) if (level >= r.minLevel) best = r;
   return best;
 }
+function customerSpawnRuleForLevel(level) {
+  let best = CONFIG.CUSTOMER_SPAWN_RULES[0];
+  for (const r of CONFIG.CUSTOMER_SPAWN_RULES) if (level >= r.minLevel) best = r;
+  return best;
+}
 /* 도감: 그 라인·단계를 처음 만들었으면 true로 표시한다. */
 function markDiscovered(line, tier) {
   if (!S.dex[line]) return;

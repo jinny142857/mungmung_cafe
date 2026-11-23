@@ -4,7 +4,7 @@
 const CONFIG = {
   // 그림 파일을 같은 이름으로 다시 올렸을 때 브라우저가 옛날 캐시를 쓰지 않도록 붙이는 숫자.
   // 그림을 바꿀 때마다 1씩 올린다.
-  ASSET_V: 30,
+  ASSET_V: 31,
 
   // 에너지
   ENERGY_MAX: 60,
@@ -136,11 +136,15 @@ const CONFIG = {
     { minLevel: 8, tiers: [3, 4, 4, 5, 5, 6, 6], counts: [1, 1, 2, 2, 3] },
   ],
 
-  // 손님
+  // 손님 — 처음엔 천천히 오다가 레벨이 오를수록 점점 자주 오게 한다(아이들이 너무 급하지 않게).
+  // 해당 레벨 이상에서 적용되는 규칙 중 가장 높은 것을 쓴다(ORDER_RULES와 같은 방식).
   CUSTOMER_MAX: 3,
-  CUSTOMER_FIRST_DELAY: 2,     // 시작 후 첫 손님(초)
-  CUSTOMER_RESPAWN_MIN: 3,     // 빈자리 생긴 뒤 다음 손님(초)
-  CUSTOMER_RESPAWN_MAX: 6,
+  CUSTOMER_SPAWN_RULES: [
+    { minLevel: 1, firstDelay: 9,  respawnMin: 11, respawnMax: 16 },
+    { minLevel: 3, firstDelay: 7,  respawnMin: 8,  respawnMax: 12 },
+    { minLevel: 5, firstDelay: 5,  respawnMin: 6,  respawnMax: 9 },
+    { minLevel: 8, firstDelay: 3,  respawnMin: 4,  respawnMax: 7 },
+  ],
   CUSTOMER_SPECIES: ["shiba", "creamshiba", "blackshiba"],
   PATIENCE_BASE: 75,           // 초
   PATIENCE_PER_EXTRA_ORDER: 15,

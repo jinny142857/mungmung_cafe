@@ -22,6 +22,7 @@ function renderHud() {
   $("hudEnergy").textContent = S.energy + "/" + CONFIG.ENERGY_MAX;
   $("btnEnergyPlus").classList.toggle("bounce", S.energy <= 5);
   $("hudToday").textContent = "오늘 " + S.today.solved + "/" + CONFIG.DAILY_GOAL + "문제 · " + S.today.served + "/" + CONFIG.DAILY_SERVE_GOAL + "서빙";
+  updateGenBadges();
 }
 
 function toast(msg) {
