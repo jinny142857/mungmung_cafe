@@ -35,7 +35,14 @@ function makeOrder() {
   const lines = unlockedLines(S.level);
   const count = pick(rule.counts);
   const items = [];
-  for (let i = 0; i < count; i++) items.push({ line: pick(lines), tier: ri(rule.tierMin, rule.tierMax), delivered: false });
+  for (let i = 0; i < count; i++) {
+    const line = pick(lines);
+    // 생성기를 업그레이드했으면 그 라인은 더 낮은 단계를 다시 만들 수 없다 — 그 단계는 주문에서 뺀다.
+    const minTier = 1 + (S.genUpgrade[line] || 0);
+    const avail = rule.tiers.filter(t => t >= minTier);
+    const tier = pick(avail.length ? avail : [Math.max(...rule.tiers)]);
+    items.push({ line, tier, delivered: false });
+  }
   return items;
 }
 
